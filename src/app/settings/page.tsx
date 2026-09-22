@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { saveSettings, addSource, toggleSource, deleteSource } from './actions';
 
 const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
   const settings = await prisma.settings.findUnique({ where: { id: 'default' } });
