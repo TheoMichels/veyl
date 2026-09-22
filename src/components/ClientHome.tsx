@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, RefreshCcw, Calendar, PanelLeft, PanelLeftClose, ChevronDown, ChevronRight, X } from 'lucide-react';
+import { Sparkles, RefreshCcw, Calendar, PanelLeft, PanelLeftClose, ChevronDown, ChevronRight, X, Cpu } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
@@ -20,6 +20,7 @@ type DayGroup = {
   displayDate: string;
   iaDigest: Digest | null;
   luxDigest: Digest | null;
+  techDigest: Digest | null;
 };
 
 export default function ClientHome({
@@ -27,7 +28,7 @@ export default function ClientHome({
 }: {
   groupedDigests: DayGroup[];
 }) {
-  const [activeTab, setActiveTab] = useState<'ia' | 'lux'>('ia');
+  const [activeTab, setActiveTab] = useState<'ia' | 'lux' | 'tech'>('ia');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   
   // States for toggle
@@ -39,12 +40,13 @@ export default function ClientHome({
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const [resIa, resLux] = await Promise.all([
+      const [resIa, resLux, resTech] = await Promise.all([
         fetch('/api/cron/ia'),
-        fetch('/api/cron/luxembourg')
+        fetch('/api/cron/luxembourg'),
+        fetch('/api/cron/tech')
       ]);
 
-      if (!resIa.ok || !resLux.ok) {
+      if (!resIa.ok || !resLux.ok || !resTech.ok) {
         throw new Error('Une erreur est survenue lors de la génération de l\'une des veilles.');
       }
       setSelectedDate(null);
@@ -166,6 +168,17 @@ export default function ClientHome({
               <span className="text-base leading-none flex-shrink-0">🇱🇺</span>
               <span className="truncate md:overflow-visible md:whitespace-normal">Marché IT Luxembourg</span>
             </button>
+            <button
+              onClick={() => setActiveTab('tech')}
+              className={`flex-1 md:flex-none flex justify-center md:justify-start items-center gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
+                activeTab === 'tech' 
+                  ? 'bg-white dark:bg-neutral-950 text-green-600 dark:text-green-400 shadow-sm' 
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
+              }`}
+            >
+              <Cpu className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate md:overflow-visible md:whitespace-normal">Tech & Hardware</span>
+            </button>
           </div>
         </div>
 
@@ -200,7 +213,7 @@ export default function ClientHome({
                 )}
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'lux' ? (
             <div className="flex flex-col h-full">
               <div className="p-4 sm:p-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
                 <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 text-neutral-900 dark:text-white">
@@ -230,7 +243,37 @@ export default function ClientHome({
                 )}
               </div>
             </div>
-          )}
+          ) : activeTab === 'tech' ? (
+            <div className="flex flex-col h-full">
+              <div className="p-4 sm:p-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
+                <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 text-neutral-900 dark:text-white">
+                  <Cpu className="w-5 h-5 text-green-500 dark:text-green-400" />
+                  Actualité Tech {activeGroup ? `- ${activeGroup.displayDate}` : ''}
+                </h2>
+              </div>
+              <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+                {!activeGroup?.techDigest ? (
+                  <p className="text-neutral-500 italic">Aucune synthèse Tech générée pour cette date.</p>
+                ) : (
+                  <div className="max-w-full">
+                    <h3 className="font-semibold text-xl sm:text-2xl mb-2 text-neutral-900 dark:text-white">{activeGroup.techDigest.title}</h3>
+                    <p className="text-sm text-neutral-500 mb-8">
+                      Généré {formatDistanceToNow(new Date(activeGroup.techDigest.createdAt), { addSuffix: true, locale: fr })}
+                    </p>
+                    <div className="prose prose-base sm:prose-lg dark:prose-invert max-w-none prose-a:text-green-600 dark:prose-a:text-green-400">
+                      <ReactMarkdown
+                        components={{
+                          a: ({ node, ...props }) => <a target="_blank" rel="noopener noreferrer" {...props} />
+                        }}
+                      >
+                        {activeGroup.techDigest.content}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
       </main>
     </div>

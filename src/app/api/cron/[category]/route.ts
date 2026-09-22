@@ -11,7 +11,8 @@ const prisma = new PrismaClient();
 
 const categoryMap: Record<string, string> = {
   'ia': 'IA',
-  'luxembourg': 'Luxembourg'
+  'luxembourg': 'Luxembourg',
+  'tech': 'Tech'
 };
 
 export async function GET(request: Request, { params }: { params: Promise<{ category: string }> | { category: string } }) {
@@ -45,7 +46,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ cate
     const now = new Date();
     const cutoffDate = new Date();
     
-    if (category === 'IA') {
+    if (category === 'IA' || category === 'Tech') {
       cutoffDate.setDate(now.getDate() - 2);
     } else {
       cutoffDate.setDate(now.getDate() - 8);
@@ -65,7 +66,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ cate
       return NextResponse.json({ message: `Aucun nouvel article pour ${category}` }, { status: 200 });
     }
 
-    const prompt = category === 'IA' ? settings.geminiPromptIA : settings.geminiPromptLux;
+    let prompt = settings.geminiPromptIA;
+    if (category === 'Luxembourg') prompt = settings.geminiPromptLux;
+    else if (category === 'Tech') prompt = (settings as any).geminiPromptTech || "Tu es un expert tech. Fais une synthèse des nouveautés matérielles et logicielles.";
     
     let digestContent;
     try {
@@ -78,9 +81,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ cate
       throw new Error(`Gemini n'a pas pu générer la synthèse pour ${category}. Vérifiez la clé API.`);
     }
 
-    const title = category === 'IA'
-      ? `Veille IA du ${format(now, 'dd MMMM yyyy', { locale: fr })}`
-      : `Veille Luxembourg - Semaine du ${format(now, 'dd MMMM yyyy', { locale: fr })}`;
+    let title = '';
+    if (category === 'IA') title = `Veille IA du ${format(now, 'dd MMMM yyyy', { locale: fr })}`;
+    else if (category === 'Luxembourg') title = `Veille Luxembourg - Semaine du ${format(now, 'dd MMMM yyyy', { locale: fr })}`;
+    else title = `Actualité Tech du ${format(now, 'dd MMMM yyyy', { locale: fr })}`;
 
     await prisma.digest.create({
       data: {

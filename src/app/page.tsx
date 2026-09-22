@@ -19,6 +19,7 @@ export default async function Home() {
         displayDate: format(new Date(digest.createdAt), 'd MMMM yyyy', { locale: fr }),
         iaDigest: null,
         luxDigest: null,
+        techDigest: null,
       };
     }
     if (digest.category === 'IA' && !acc[dateStr].iaDigest) {
@@ -26,6 +27,9 @@ export default async function Home() {
     }
     if (digest.category === 'Luxembourg' && !acc[dateStr].luxDigest) {
       acc[dateStr].luxDigest = digest;
+    }
+    if (digest.category === 'Tech' && !acc[dateStr].techDigest) {
+      acc[dateStr].techDigest = digest;
     }
     return acc;
   }, {} as Record<string, any>);

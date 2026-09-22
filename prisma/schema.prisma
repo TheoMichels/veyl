@@ -29,5 +29,6 @@ model Settings {
   id              String   @id @default("default")
   geminiPromptIA  String
   geminiPromptLux String
+  geminiPromptTech String  @default("Tu es un journaliste tech. Résume les nouveautés matérielles (hardware) et logicielles (software). Structure avec des puces et ajoute les liens sources.")
   cronEnabled     Boolean  @default(true)
 }

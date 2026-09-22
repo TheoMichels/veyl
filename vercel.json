@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/luxembourg",
       "schedule": "52 13 * * 1-5"
+    },
+    {
+      "path": "/api/cron/tech",
+      "schedule": "0 3 * * 1-5"
     }
   ]
 }
