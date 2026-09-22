@@ -7,8 +7,8 @@ export async function analyzeGlobalFeed(
   prompt: string
 ) {
   const fullPrompt = `${prompt}\n\nVoici les articles bruts :\n${articlesText.substring(0, 15000)}`;
-  // On utilise uniquement des modèles "Flash" car les versions "Pro" requièrent souvent une carte bancaire (quota 0 sur le Free Tier).
-  const modelsToTry = ['gemini-3.1-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+  // On inclut gemini-3.5-flash en filet de sécurité car les versions plus récentes (3.6/3.7) sont temporairement surchargées (erreur 503).
+  const modelsToTry = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash'];
 
   for (const modelName of modelsToTry) {
     try {
