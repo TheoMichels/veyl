@@ -1,0 +1,32 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Les éditions globales de veille (Briefing)
+model Digest {
+  id          String   @id @default(cuid())
+  category    String   // 'IA' ou 'Luxembourg'
+  title       String   // ex: "Veille IA du 22 Septembre"
+  content     String   // Contenu markdown/HTML de la synthèse (généré par l'IA)
+  createdAt   DateTime @default(now())
+}
+
+model Source {
+  id        String    @id @default(cuid())
+  name      String
+  url       String    @unique
+  category  String    // 'IA' ou 'Luxembourg'
+  isActive  Boolean   @default(true)
+}
+
+model Settings {
+  id              String   @id @default("default")
+  geminiPromptIA  String
+  geminiPromptLux String
+  cronEnabled     Boolean  @default(true)
+}
