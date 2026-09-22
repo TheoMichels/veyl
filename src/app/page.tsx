@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const prisma = new PrismaClient();
-export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const allDigests = await prisma.digest.findMany({

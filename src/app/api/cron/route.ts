@@ -5,6 +5,8 @@ import { analyzeGlobalFeed } from '@/lib/gemini';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
