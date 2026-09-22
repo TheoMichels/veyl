@@ -22,9 +22,22 @@ Structure ta réponse avec des titres clairs, des puces (bullet points) et ajout
   })
 
   const sources = [
+    // --- Catégorie : IA ---
+    { name: 'TechCrunch AI', url: 'https://techcrunch.com/category/artificial-intelligence/feed/', category: 'IA' },
+    { name: 'The Verge AI', url: 'https://www.theverge.com/rss/artificial-intelligence/index.xml', category: 'IA' },
+    { name: 'MarkTechPost (AI Research)', url: 'https://www.marktechpost.com/feed/', category: 'IA' },
     { name: 'Hacker News (AI)', url: 'https://hnrss.org/newest?q=AI', category: 'IA' },
+    
+    // --- Catégorie : Tech ---
+    { name: 'Ars Technica', url: 'https://feeds.arstechnica.com/arstechnica/index', category: 'Tech' },
+    { name: 'The Verge Tech', url: 'https://www.theverge.com/rss/index.xml', category: 'Tech' },
+    { name: 'TechCrunch', url: 'https://techcrunch.com/feed/', category: 'Tech' },
+    { name: 'Hacker News (Frontpage)', url: 'https://hnrss.org/frontpage', category: 'Tech' },
+
+    // --- Catégorie : Luxembourg ---
     { name: 'Paperjam Tech', url: 'https://paperjam.lu/rss/tech', category: 'Luxembourg' },
-    { name: 'Silicon Luxembourg', url: 'https://www.siliconluxembourg.lu/feed/', category: 'Luxembourg' }
+    { name: 'Silicon Luxembourg', url: 'https://www.siliconluxembourg.lu/feed/', category: 'Luxembourg' },
+    { name: 'Delano Business/Tech', url: 'https://delano.lu/rss', category: 'Luxembourg' }
   ]
 
   for (const s of sources) {
