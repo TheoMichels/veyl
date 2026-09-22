@@ -1,6 +1,8 @@
 import Parser from 'rss-parser';
 
-const parser = new Parser();
+const parser = new Parser({
+  timeout: 5000,
+});
 
 export async function fetchFeed(url: string) {
   try {

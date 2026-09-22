@@ -52,13 +52,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ cate
       cutoffDate.setDate(now.getDate() - 8);
     }
 
-    for (const source of sources) {
-      const feedItems = await fetchFeed(source.url);
+    const feedPromises = sources.map(source => 
+      fetchFeed(source.url).then(items => ({ source, items }))
+    );
+    const results = await Promise.allSettled(feedPromises);
 
-      for (const item of feedItems) {
-        if (item.pubDate < cutoffDate) continue;
-
-        combinedArticlesText += `\n---\nSource: ${source.name}\nTitre: ${item.title}\nLien: ${item.link}\nContenu/Résumé: ${item.content}\n---\n`;
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        const { source, items } = result.value;
+        for (const item of items) {
+          if (item.pubDate < cutoffDate) continue;
+          combinedArticlesText += `\n---\nSource: ${source.name}\nTitre: ${item.title}\nLien: ${item.link}\nContenu/Résumé: ${item.content}\n---\n`;
+        }
+      } else {
+        console.error(`Error processing feed for source:`, result.reason);
       }
     }
 

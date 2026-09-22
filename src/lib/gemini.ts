@@ -2,29 +2,53 @@ import { GoogleGenAI } from '@google/genai';
 
 const ai = new GoogleGenAI();
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export async function analyzeGlobalFeed(
   articlesText: string, 
   prompt: string
 ) {
-  const fullPrompt = `${prompt}\n\nVoici les articles bruts :\n${articlesText.substring(0, 15000)}`;
-  // On inclut gemini-3.5-flash en filet de sécurité car les versions plus récentes (3.6/3.7) sont temporairement surchargées (erreur 503).
-  const modelsToTry = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash'];
+  // On augmente la limite de 15 000 à 100 000 caractères.
+  // 100 000 caractères = ~25 000 tokens. 
+  // Avec le modèle Pro (env. 1.25$ / 1M tokens), cela coûte ~0.03$ par appel, 
+  // ce qui permet de rester parfaitement dans votre budget de 2-3€/mois tout en lisant 6x plus d'articles.
+  const fullPrompt = `${prompt}\n\nVoici les articles bruts :\n${articlesText.substring(0, 100000)}`;
+  // On inclut les modèles Pro en priorité pour plus de robustesse (facturation au token).
+  const modelsToTry = [
+    'gemini-3.5-pro',
+    'gemini-3.8-flash', 
+    'gemini-3.7-flash', 
+    'gemini-3.5-flash'
+  ];
+
+  const maxRetries = 3;
+  let lastError;
 
   for (const modelName of modelsToTry) {
-    try {
-      const response = await ai.models.generateContent({
-        model: modelName,
-        contents: fullPrompt,
-      });
-      return response.text;
-    } catch (error: any) {
-      console.warn(`[Avertissement] Le modèle ${modelName} a échoué: ${error.message}`);
-      // Si c'est le dernier modèle testé, on throw l'erreur
-      if (modelName === modelsToTry[modelsToTry.length - 1]) {
-        throw error;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: fullPrompt,
+        });
+        return response.text;
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`[Avertissement] Le modèle ${modelName} a échoué (Tentative ${attempt}/${maxRetries}): ${error.message}`);
+        
+        // Si c'est une erreur de type surcharge (503) ou quota (429), on attend avec un délai exponentiel
+        const errorMessage = error.message?.toLowerCase() || '';
+        if (errorMessage.includes('503') || errorMessage.includes('429') || errorMessage.includes('overloaded') || errorMessage.includes('unavailable')) {
+          const delay = attempt * 2000; // 2s, 4s, 6s
+          console.log(`Attente de ${delay}ms avant de réessayer...`);
+          await sleep(delay);
+          continue; // Réessayer le même modèle
+        } else {
+          break; // Passer au modèle suivant pour les autres types d'erreurs (ex: 400 Bad Request)
+        }
       }
-      // Sinon, on continue la boucle pour essayer le modèle suivant
     }
   }
-  return null;
+  
+  throw new Error(`Tous les modèles ont échoué après plusieurs tentatives. Dernière erreur: ${lastError?.message}`);
 }
