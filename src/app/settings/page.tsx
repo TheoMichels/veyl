@@ -36,6 +36,14 @@ export default async function SettingsPage() {
               className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg p-3 text-sm h-32 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-neutral-900 dark:text-neutral-100"
             />
           </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Prompt pour la catégorie "Tech"</label>
+            <textarea 
+              name="geminiPromptTech"
+              defaultValue={(settings as any).geminiPromptTech || ''}
+              className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg p-3 text-sm h-32 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-neutral-900 dark:text-neutral-100"
+            />
+          </div>
           <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm shadow-sm">
             Sauvegarder les instructions
           </button>
@@ -87,6 +95,7 @@ export default async function SettingsPage() {
             <select name="category" className="bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg p-2.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <option value="IA">IA</option>
               <option value="Luxembourg">Luxembourg</option>
+              <option value="Tech">Tech</option>
             </select>
             <button type="submit" className="bg-neutral-800 hover:bg-neutral-900 dark:bg-neutral-200 dark:hover:bg-white text-white dark:text-neutral-900 px-4 py-2.5 rounded-lg font-medium transition-colors text-sm whitespace-nowrap shadow-sm">
               Ajouter

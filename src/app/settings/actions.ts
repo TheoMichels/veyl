@@ -8,10 +8,11 @@ const prisma = new PrismaClient();
 export async function saveSettings(formData: FormData) {
   const geminiPromptIA = formData.get('geminiPromptIA') as string;
   const geminiPromptLux = formData.get('geminiPromptLux') as string;
+  const geminiPromptTech = formData.get('geminiPromptTech') as string;
 
   await prisma.settings.update({
     where: { id: 'default' },
-    data: { geminiPromptIA, geminiPromptLux },
+    data: { geminiPromptIA, geminiPromptLux, geminiPromptTech },
   });
 
   revalidatePath('/settings');
