@@ -58,11 +58,25 @@ export default function ClientHome({
     }
   };
 
+  const filteredDigests = React.useMemo(() => {
+    return groupedDigests.filter(group => {
+      if (activeTab === 'ia') return group.iaDigest !== null;
+      if (activeTab === 'lux') return group.luxDigest !== null;
+      if (activeTab === 'tech') return group.techDigest !== null;
+      return false;
+    });
+  }, [groupedDigests, activeTab]);
+
   useEffect(() => {
-    if (groupedDigests.length > 0 && !selectedDate) {
-      setSelectedDate(groupedDigests[0].dateStr);
+    if (filteredDigests.length > 0) {
+      const isValid = filteredDigests.some(g => g.dateStr === selectedDate);
+      if (!isValid) {
+        setSelectedDate(filteredDigests[0].dateStr);
+      }
+    } else if (selectedDate !== null) {
+      setSelectedDate(null);
     }
-  }, [groupedDigests, selectedDate]);
+  }, [filteredDigests, selectedDate]);
 
   const activeGroup = groupedDigests.find(g => g.dateStr === selectedDate);
   const currentIADigest = activeGroup?.iaDigest;
@@ -110,10 +124,10 @@ export default function ClientHome({
             <Calendar className="w-4 h-4" />
             Historique
           </h2>
-          {groupedDigests.length === 0 ? (
+          {filteredDigests.length === 0 ? (
             <p className="text-sm text-neutral-500">Aucune veille disponible.</p>
           ) : (
-            groupedDigests.map((group) => (
+            filteredDigests.map((group) => (
               <button
                 key={group.dateStr}
                 onClick={() => {
@@ -145,10 +159,10 @@ export default function ClientHome({
             {isSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeft className="w-5 h-5" />}
           </button>
 
-          <div className="flex w-full md:w-fit gap-1 md:gap-2 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+          <div className="flex flex-wrap md:flex-nowrap w-full md:w-fit gap-1 md:gap-2 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
             <button
               onClick={() => setActiveTab('ia')}
-              className={`flex-1 md:flex-none flex justify-center md:justify-start items-center gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
+              className={`flex-1 basis-[calc(50%-4px)] md:basis-auto md:flex-none min-w-0 flex justify-center md:justify-start items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
                 activeTab === 'ia' 
                   ? 'bg-white dark:bg-neutral-950 text-indigo-600 dark:text-indigo-400 shadow-sm' 
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
@@ -159,7 +173,7 @@ export default function ClientHome({
             </button>
             <button
               onClick={() => setActiveTab('lux')}
-              className={`flex-1 md:flex-none flex justify-center md:justify-start items-center gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
+              className={`flex-1 basis-[calc(50%-4px)] md:basis-auto md:flex-none min-w-0 flex justify-center md:justify-start items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
                 activeTab === 'lux' 
                   ? 'bg-white dark:bg-neutral-950 text-blue-600 dark:text-blue-400 shadow-sm' 
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
@@ -170,7 +184,7 @@ export default function ClientHome({
             </button>
             <button
               onClick={() => setActiveTab('tech')}
-              className={`flex-1 md:flex-none flex justify-center md:justify-start items-center gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
+              className={`flex-1 basis-[calc(50%-4px)] md:basis-auto md:flex-none min-w-0 flex justify-center md:justify-start items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
                 activeTab === 'tech' 
                   ? 'bg-white dark:bg-neutral-950 text-green-600 dark:text-green-400 shadow-sm' 
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'

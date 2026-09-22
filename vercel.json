@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/ia",
-      "schedule": "52 13 * * 1-5"
+      "schedule": "0 3 * * 1-5"
     },
     {
       "path": "/api/cron/luxembourg",
-      "schedule": "52 13 * * 1-5"
+      "schedule": "0 3 * * 5"
     },
     {
       "path": "/api/cron/tech",

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Settings, Radar } from 'lucide-react';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
+import NextTopLoader from 'nextjs-toploader';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,8 +22,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${inter.className} bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 min-h-screen flex flex-col transition-colors`}>
+      <body className={`${inter.className} bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 min-h-screen flex flex-col transition-colors overflow-x-hidden`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <NextTopLoader color="#4f46e5" showSpinner={false} />
           <header className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 sticky top-0 z-10 transition-colors">
             <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2.5 font-black text-2xl tracking-tighter">
@@ -45,7 +47,7 @@ export default function RootLayout({
               </nav>
             </div>
           </header>
-          <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
+          <main className="flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
             {children}
           </main>
         </ThemeProvider>
