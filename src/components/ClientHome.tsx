@@ -39,10 +39,13 @@ export default function ClientHome({
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const res = await fetch('/api/cron');
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.message || 'Erreur inconnue');
+      const [resIa, resLux] = await Promise.all([
+        fetch('/api/cron/ia'),
+        fetch('/api/cron/luxembourg')
+      ]);
+
+      if (!resIa.ok || !resLux.ok) {
+        throw new Error('Une erreur est survenue lors de la génération de l\'une des veilles.');
       }
       setSelectedDate(null);
       router.refresh();
