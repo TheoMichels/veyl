@@ -35,9 +35,9 @@ Structure ta réponse avec des titres clairs, des puces (bullet points) et ajout
     { name: 'Hacker News (Frontpage)', url: 'https://hnrss.org/frontpage', category: 'Tech' },
 
     // --- Catégorie : Luxembourg ---
-    { name: 'Paperjam Tech', url: 'https://paperjam.lu/rss/tech', category: 'Luxembourg' },
-    { name: 'Silicon Luxembourg', url: 'https://www.siliconluxembourg.lu/feed/', category: 'Luxembourg' },
-    { name: 'Delano Business/Tech', url: 'https://delano.lu/rss', category: 'Luxembourg' }
+    { name: 'L\'essentiel (Économie)', url: 'https://partner-feeds.lessentiel.lu/rss/lessentiel-fr/economie', category: 'Luxembourg' },
+    { name: 'CSSF (Régulation)', url: 'https://www.cssf.lu/fr/feed/', category: 'Luxembourg' },
+    { name: 'RTL Today', url: 'https://today.rtl.lu/rss/feed/headlines.rss', category: 'Luxembourg' }
   ]
 
   for (const s of sources) {
