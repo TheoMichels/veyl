@@ -6,7 +6,22 @@ const parser = new Parser({
 
 export async function fetchFeed(url: string) {
   try {
-    const feed = await parser.parseURL(url);
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; VeilleBot/1.0)',
+        'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+      },
+      next: { revalidate: 3600 } // Optionally use Next.js cache if applicable, or just standard fetch
+    });
+
+    if (!res.ok) {
+      console.warn(`[RSS] Failed to fetch ${url}: HTTP ${res.status}`);
+      return [];
+    }
+
+    const text = await res.text();
+    const feed = await parser.parseString(text);
+    
     return feed.items.map(item => ({
       title: item.title || 'Sans titre',
       link: item.link || '',
@@ -14,7 +29,7 @@ export async function fetchFeed(url: string) {
       pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
     }));
   } catch (error) {
-    console.error(`Error fetching RSS feed ${url}:`, error);
+    console.error(`[RSS] Error parsing feed ${url}:`, (error as Error).message);
     return [];
   }
 }

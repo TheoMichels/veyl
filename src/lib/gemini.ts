@@ -15,10 +15,10 @@ export async function analyzeGlobalFeed(
   const fullPrompt = `${prompt}\n\nVoici les articles bruts :\n${articlesText.substring(0, 100000)}`;
   // On inclut les modèles Pro en priorité pour plus de robustesse (facturation au token).
   const modelsToTry = [
-    'gemini-3.5-pro',
-    'gemini-3.8-flash', 
-    'gemini-3.7-flash', 
-    'gemini-3.5-flash'
+    'gemini-3.1-pro',
+    'gemini-3.1-flash', 
+    'gemini-2.5-pro', 
+    'gemini-2.5-flash'
   ];
 
   const maxRetries = 3;
