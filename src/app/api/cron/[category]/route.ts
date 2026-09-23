@@ -44,12 +44,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ cate
 
     let combinedArticlesText = '';
     const now = new Date();
-    const cutoffDate = new Date();
     
-    if (category === 'IA' || category === 'Tech') {
-      cutoffDate.setDate(now.getDate() - 2);
+    // Récupérer la date de la dernière veille générée pour cette catégorie
+    const lastDigest = await prisma.digest.findFirst({
+      where: { category },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let cutoffDate = new Date();
+    if (lastDigest) {
+      cutoffDate = new Date(lastDigest.createdAt);
     } else {
-      cutoffDate.setDate(now.getDate() - 8);
+      // Fallback s'il n'y a aucune veille existante
+      if (category === 'IA' || category === 'Tech') {
+        cutoffDate.setDate(now.getDate() - 2);
+      } else {
+        cutoffDate.setDate(now.getDate() - 8);
+      }
     }
 
     const feedPromises = sources.map(source => 
