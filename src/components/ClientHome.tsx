@@ -58,6 +58,21 @@ export default function ClientHome({
     }
   };
 
+  const handleTabChange = (tab: 'ia' | 'lux' | 'tech') => {
+    setActiveTab(tab);
+    const newFilteredDigests = groupedDigests.filter(group => {
+      if (tab === 'ia') return group.iaDigest !== null;
+      if (tab === 'lux') return group.luxDigest !== null;
+      if (tab === 'tech') return group.techDigest !== null;
+      return false;
+    });
+    if (newFilteredDigests.length > 0) {
+      setSelectedDate(newFilteredDigests[0].dateStr);
+    } else {
+      setSelectedDate(null);
+    }
+  };
+
   const filteredDigests = React.useMemo(() => {
     return groupedDigests.filter(group => {
       if (activeTab === 'ia') return group.iaDigest !== null;
@@ -161,7 +176,7 @@ export default function ClientHome({
 
           <div className="flex flex-wrap md:flex-nowrap w-full md:w-fit gap-1 md:gap-2 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
             <button
-              onClick={() => setActiveTab('ia')}
+              onClick={() => handleTabChange('ia')}
               className={`flex-1 basis-[calc(50%-4px)] md:basis-auto md:flex-none min-w-0 flex justify-center md:justify-start items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
                 activeTab === 'ia' 
                   ? 'bg-white dark:bg-neutral-950 text-indigo-600 dark:text-indigo-400 shadow-sm' 
@@ -172,7 +187,7 @@ export default function ClientHome({
               <span className="truncate md:overflow-visible md:whitespace-normal">Intelligence Artificielle</span>
             </button>
             <button
-              onClick={() => setActiveTab('lux')}
+              onClick={() => handleTabChange('lux')}
               className={`flex-1 basis-[calc(50%-4px)] md:basis-auto md:flex-none min-w-0 flex justify-center md:justify-start items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
                 activeTab === 'lux' 
                   ? 'bg-white dark:bg-neutral-950 text-blue-600 dark:text-blue-400 shadow-sm' 
@@ -183,7 +198,7 @@ export default function ClientHome({
               <span className="truncate md:overflow-visible md:whitespace-normal">Marché IT Luxembourg</span>
             </button>
             <button
-              onClick={() => setActiveTab('tech')}
+              onClick={() => handleTabChange('tech')}
               className={`flex-1 basis-[calc(50%-4px)] md:basis-auto md:flex-none min-w-0 flex justify-center md:justify-start items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-md font-medium text-xs md:text-sm transition-colors ${
                 activeTab === 'tech' 
                   ? 'bg-white dark:bg-neutral-950 text-green-600 dark:text-green-400 shadow-sm' 
