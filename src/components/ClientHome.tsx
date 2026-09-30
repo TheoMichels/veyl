@@ -6,6 +6,7 @@ import { Sparkles, RefreshCcw, Calendar, PanelLeft, PanelLeftClose, ChevronDown,
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
+import ExpandableNews from './ExpandableNews';
 
 type Digest = {
   id: string;
@@ -229,14 +230,10 @@ export default function ClientHome({
                     <p className="text-sm text-neutral-500 mb-8">
                       Généré {formatDistanceToNow(new Date(currentIADigest.createdAt), { addSuffix: true, locale: fr })}
                     </p>
-                    <div className="prose prose-base sm:prose-lg dark:prose-invert max-w-none prose-a:text-indigo-600 dark:prose-a:text-indigo-400">
-                      <ReactMarkdown
-                        components={{
-                          a: ({ node, ...props }) => <a target="_blank" rel="noopener noreferrer" {...props} />
-                        }}
-                      >
-                        {currentIADigest.content}
-                      </ReactMarkdown>
+                    <div className="max-w-none">
+                      {currentIADigest.content.split(/(?=^###\s)/m).map((chunk, idx) => (
+                        <ExpandableNews key={idx} chunk={chunk} />
+                      ))}
                     </div>
                   </div>
                 )}
@@ -259,14 +256,10 @@ export default function ClientHome({
                     <p className="text-sm text-neutral-500 mb-8">
                       Généré {formatDistanceToNow(new Date(currentLuxDigest.createdAt), { addSuffix: true, locale: fr })}
                     </p>
-                    <div className="prose prose-base sm:prose-lg dark:prose-invert max-w-none prose-a:text-indigo-600 dark:prose-a:text-indigo-400">
-                      <ReactMarkdown
-                        components={{
-                          a: ({ node, ...props }) => <a target="_blank" rel="noopener noreferrer" {...props} />
-                        }}
-                      >
-                        {currentLuxDigest.content}
-                      </ReactMarkdown>
+                    <div className="max-w-none">
+                      {currentLuxDigest.content.split(/(?=^###\s)/m).map((chunk, idx) => (
+                        <ExpandableNews key={idx} chunk={chunk} />
+                      ))}
                     </div>
                   </div>
                 )}
@@ -289,14 +282,10 @@ export default function ClientHome({
                     <p className="text-sm text-neutral-500 mb-8">
                       Généré {formatDistanceToNow(new Date(activeGroup.techDigest.createdAt), { addSuffix: true, locale: fr })}
                     </p>
-                    <div className="prose prose-base sm:prose-lg dark:prose-invert max-w-none prose-a:text-green-600 dark:prose-a:text-green-400">
-                      <ReactMarkdown
-                        components={{
-                          a: ({ node, ...props }) => <a target="_blank" rel="noopener noreferrer" {...props} />
-                        }}
-                      >
-                        {activeGroup.techDigest.content}
-                      </ReactMarkdown>
+                    <div className="max-w-none">
+                      {activeGroup.techDigest.content.split(/(?=^###\s)/m).map((chunk, idx) => (
+                        <ExpandableNews key={idx} chunk={chunk} />
+                      ))}
                     </div>
                   </div>
                 )}

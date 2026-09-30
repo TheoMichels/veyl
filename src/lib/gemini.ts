@@ -52,3 +52,53 @@ export async function analyzeGlobalFeed(
 
   throw new Error(`Tous les modèles ont échoué après plusieurs tentatives. Dernière erreur: ${lastError?.message}`);
 }
+
+export async function researchNews(newsText: string) {
+  const prompt = `Voici une actualité extraite d'une veille technologique :
+
+${newsText}
+
+Effectue une recherche plus poussée sur ce sujet précis et rédige une synthèse détaillée de 2 à 3 paragraphes pour m'aider à aller plus loin. Ne te contente pas de répéter ce qui est écrit, apporte des informations nouvelles, du contexte supplémentaire ou des implications. Formatte ta réponse en Markdown.`;
+
+  const modelsToTry = [
+    'gemini-3.8-flash',
+    'gemini-3.7-flash',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+    'gemini-3.1-pro-preview'
+  ];
+
+  const maxRetries = 3;
+  let lastError;
+
+  for (const modelName of modelsToTry) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            tools: [{ googleSearch: {} }],
+          }
+        });
+        return response.text;
+      } catch (error: unknown) {
+        const err = error as Error;
+        lastError = err;
+        console.warn(`[Avertissement] Le modèle ${modelName} a échoué pour la recherche approfondie (Tentative ${attempt}/${maxRetries}): ${err.message}`);
+
+        const errorMessage = err.message?.toLowerCase() || '';
+        if (errorMessage.includes('503') || errorMessage.includes('429') || errorMessage.includes('overloaded') || errorMessage.includes('unavailable')) {
+          const delay = attempt * 2000;
+          console.log(`Attente de ${delay}ms avant de réessayer...`);
+          await sleep(delay);
+          continue;
+        } else {
+          break;
+        }
+      }
+    }
+  }
+
+  throw new Error(`Tous les modèles ont échoué pour la recherche approfondie. Dernière erreur: ${lastError?.message}`);
+}
