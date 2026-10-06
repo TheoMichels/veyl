@@ -58,7 +58,7 @@ export async function researchNews(newsText: string) {
 
 ${newsText}
 
-Effectue une recherche plus poussée sur ce sujet précis et rédige une synthèse détaillée de 2 à 3 paragraphes pour m'aider à aller plus loin. Ne te contente pas de répéter ce qui est écrit, apporte des informations nouvelles, du contexte supplémentaire ou des implications. Formatte ta réponse en Markdown.`;
+Développe cette actualité en apportant du contexte supplémentaire, des détails clés ou des implications concrètes, tout en restant relativement synthétique et rapide à lire (1 à 2 courts paragraphes ou points clés percutants). L'objectif est d'en savoir plus pour aller plus loin, sans prendre trop de temps de lecture et sans répéter ce qui est déjà écrit. Formatte ta réponse en Markdown.`;
 
   const modelsToTry = [
     'gemini-3.8-flash',

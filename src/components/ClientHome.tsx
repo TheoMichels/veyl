@@ -231,7 +231,7 @@ export default function ClientHome({
                       Généré {formatDistanceToNow(new Date(currentIADigest.createdAt), { addSuffix: true, locale: fr })}
                     </p>
                     <div className="max-w-none">
-                      {currentIADigest.content.split(/(?=^###\s)/m).map((chunk, idx) => (
+                      {currentIADigest.content.split(/(?=^#{2,3}\s)/m).map((chunk, idx) => (
                         <ExpandableNews key={idx} chunk={chunk} />
                       ))}
                     </div>
@@ -257,7 +257,7 @@ export default function ClientHome({
                       Généré {formatDistanceToNow(new Date(currentLuxDigest.createdAt), { addSuffix: true, locale: fr })}
                     </p>
                     <div className="max-w-none">
-                      {currentLuxDigest.content.split(/(?=^###\s)/m).map((chunk, idx) => (
+                      {currentLuxDigest.content.split(/(?=^#{2,3}\s)/m).map((chunk, idx) => (
                         <ExpandableNews key={idx} chunk={chunk} />
                       ))}
                     </div>
@@ -283,7 +283,7 @@ export default function ClientHome({
                       Généré {formatDistanceToNow(new Date(activeGroup.techDigest.createdAt), { addSuffix: true, locale: fr })}
                     </p>
                     <div className="max-w-none">
-                      {activeGroup.techDigest.content.split(/(?=^###\s)/m).map((chunk, idx) => (
+                      {activeGroup.techDigest.content.split(/(?=^#{2,3}\s)/m).map((chunk, idx) => (
                         <ExpandableNews key={idx} chunk={chunk} />
                       ))}
                     </div>
