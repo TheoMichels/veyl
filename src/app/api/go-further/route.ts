@@ -8,6 +8,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Texte manquant" }, { status: 400 });
     }
 
+    console.log("\n=== TEXTE REÇU DANS API ===\n", text, "\n===========================\n");
     const content = await researchNews(text);
 
     return NextResponse.json({ content });

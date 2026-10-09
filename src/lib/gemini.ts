@@ -58,7 +58,8 @@ export async function researchNews(newsText: string) {
 
 ${newsText}
 
-Développe cette actualité en apportant du contexte supplémentaire, des détails clés ou des implications concrètes, tout en restant relativement synthétique et rapide à lire (1 à 2 courts paragraphes ou points clés percutants). L'objectif est d'en savoir plus pour aller plus loin, sans prendre trop de temps de lecture et sans répéter ce qui est déjà écrit. Formatte ta réponse en Markdown.`;
+Développe cette actualité en apportant du contexte supplémentaire, des détails clés ou des implications concrètes. L'objectif est d'en savoir plus pour "aller plus loin", tout en restant synthétique et rapide à lire (1 à 2 courts paragraphes ou points clés percutants). 
+Important : Assure-toi de bien relier ton explication aux acteurs et technologies spécifiques mentionnés dans le texte original (par exemple en les citant), afin de ne pas produire une réponse trop générique ou théorique. Formatte ta réponse en Markdown.`;
 
   const modelsToTry = [
     'gemini-3.8-flash',
