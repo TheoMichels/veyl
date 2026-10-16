@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "node scripts/setup-local-db.mjs && next dev --turbopack",
+    "setup:db": "node scripts/setup-local-db.mjs",
+    "test": "node scripts/test-db-local.mjs",
+    "test:unit": "node scripts/test-db-local.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
