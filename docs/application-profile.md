@@ -26,7 +26,7 @@ Veyl est le pilote du format de fiche. Son existant sert à éprouver la grille 
 
 **OBSERVÉ** = code/configuration lus ; **EXÉCUTÉ** = commande réellement lancée ; **DÉCLARÉ** = documentation ; **INCONNU** = non établi ; **PROPOSÉ** = cible future.
 
-Audit statique des sources `src/`, schéma et migrations Prisma, manifests, scripts de diagnostic et configurations. Deux analyses distinctes sont conservées dans les rapports [architecture](../.agents/handoff/application-profile/architecture-audit.md) et [qualité](../.agents/handoff/application-profile/quality-audit.md).
+Audit statique des sources `src/`, schéma et migrations Prisma, manifests, scripts de diagnostic et configurations. Deux analyses distinctes sont conservées dans les rapports [architecture](audits/architecture-audit.md) et [qualité](audits/quality-audit.md).
 
 Aucun accès à une base, appel RSS/Gemini, seed, migration ou déploiement. Aucune valeur de secret consultée. Aucun parcours navigateur vérifié : les constats de design décrivent l'implémentation, pas son rendu validé. Les contrôles effectivement lancés sont indiqués en section 6.
 
@@ -230,6 +230,6 @@ Mettre à jour cette fiche en cas de changement de stack, schéma, exposition, p
 - [Page d'accueil](../src/app/page.tsx), [ClientHome](../src/components/ClientHome.tsx), [approfondissement UI](../src/components/ExpandableNews.tsx), [layout](../src/app/layout.tsx), [CSS global](../src/app/globals.css), [thème](../src/components/theme-toggle.tsx), [paramètres](../src/app/settings/page.tsx).
 - [Actions](../src/app/settings/actions.ts), [cron](../src/app/api/cron/%5Bcategory%5D/route.ts), [approfondissement API](../src/app/api/go-further/route.ts), [RSS](../src/lib/rss.ts), [Gemini](../src/lib/gemini.ts).
 - [Schéma](../prisma/schema.prisma), [migration](../prisma/migrations/20260922081028_init/migration.sql), [verrou migrations](../prisma/migrations/migration_lock.toml), [crons](../vercel.json).
-- Rapports [architecture](../.agents/handoff/application-profile/architecture-audit.md) et [qualité](../.agents/handoff/application-profile/quality-audit.md) : références par ligne et contrôles.
+- Rapports [architecture](audits/architecture-audit.md) et [qualité](audits/quality-audit.md) : références par ligne et contrôles.
 
 L'état de production, les données existantes, les protections d'hébergement, la santé des fournisseurs et le rendu réel restent à vérifier avant une migration. Cette fiche n'est pas un verdict QA de l'application.

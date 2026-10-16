@@ -49,3 +49,6 @@ prisma/schema.local.prisma
 .agents/state/
 
 migrate-data.mjs
+
+# Artefacts d'agents (rapports, captures, logs)
+.agents/handoff/
