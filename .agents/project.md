@@ -3,13 +3,14 @@
 
 ## Produit
 - But : veille techno et stratégique (IA, marché IT Luxembourg, Tech & Hardware) : agrégation RSS, synthèses quotidiennes et approfondissements via Google Gemini.
-- Utilisateur : moi seul, sans authentification · Plateformes : PWA web (export statique) + mobile Expo.
+- Utilisateur : moi seul · Plateformes : PWA web (export statique) + mobile Expo.
 
 ## Stack
 - Expo SDK 57 (RN Web, React 19, TS strict) · `StyleSheet` + `expo-linear-gradient` + `react-native-svg`.
-- Stockage : `app.config.js` injecte `storageMode` (`local` via AsyncStorage / `supabase` en cloud Vercel).
-- Schéma : `prisma/schema.prisma` (PostgreSQL Supabase). Déploiement : `scripts/deploy-db.mjs`.
-- Validation : `src/utils/validation.ts` (zod). Dates : `date-fns` locale `fr`.
+- Stockage : `src/config/storageMode.ts` (local AsyncStorage `@veyl_*_v1` / cloud Supabase schéma `veyl`).
+- Schéma : `prisma/schema.prisma` multiSchema (`veyl`, `auth`). Déploiement : `scripts/deploy-db.mjs`.
+- Auth : Supabase Auth partagée (`src/services/authService.ts`, `useAuth.ts`, `AuthModal.tsx`).
+- Validation : `src/utils/validation.ts` (zod pour entrées externes et stockage local).
 - Serveur prod : Vercel Functions (`api/*.ts`) + crons `vercel.json`.
 
 ## Commandes
@@ -21,17 +22,16 @@
 | Tests / E2E | `npm test` (`node --test tests/*.test.mjs`) / `npm run test:e2e` (`playwright test`) |
 | Base de données | `npm run db:deploy` (`node scripts/deploy-db.mjs`) / `npm run db:studio` (`prisma studio`) |
 
-## Modèle de données
-| Entité | Champs clés | Repository |
+## Modèle de données (schéma veyl)
+| Entité | Table / Clés | Repository |
 |---|---|---|
-| Digest | id, category (IA \| Luxembourg \| Tech), title, content, createdAt | `src/storage/digestRepository.ts` |
-| Source | id, name, url, category, isActive | `src/storage/sourceRepository.ts` |
-| Settings | id `default`, geminiPromptIA/Lux/Tech, cronEnabled | `src/storage/settingsRepository.ts` |
-- Appels IA : `src/services/aiService.ts` → API.
+| Digest | `veyl.digests` (id, user_id, category, title, content, created_at) | `src/storage/digestRepository.ts` |
+| Source | `veyl.sources` (id, user_id, name, url, category, is_active) | `src/storage/sourceRepository.ts` |
+| Settings | `veyl.user_settings` (user_id, gemini_prompt_*, cron_enabled) | `src/storage/settingsRepository.ts` |
 
 ## Design
-- Tokens §2 `src/theme/colors.ts` (gradient, brand `#4F46E5`, panel, radius 12–24, shadows sm/md/lg) · clair & sombre · testID kebab-case.
-- DA radar gradient indigo/violet alignée sur main · surfaces translucides · onglets IA/Lux/Tech · approfondissements IA.
+- Tokens §2 `src/theme/colors.ts` (gradient, brand `#4F46E5`, panel glass, radius 12–24, shadows) · clair & sombre · testID kebab-case.
+- DA radar gradient indigo/violet · surfaces translucides · badge Stockage local / compte cloud · onglets IA/Lux/Tech.
 
 ## Zones sensibles et déploiement
-- Déploiement Vercel (fonctions + crons). Clé Gemini et base Postgres côté serveur uniquement.
+- Déploiement Vercel (fonctions + crons). Données en schéma `veyl` sur Supabase partagé. Clé Gemini serveur uniquement.
