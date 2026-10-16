@@ -62,6 +62,11 @@ export const sourceSchema = z.object({
 
 export const sourcesListSchema = z.array(sourceSchema);
 
+export const credentialsSchema = z.object({
+  email: z.string().trim().email('Adresse e-mail invalide.'),
+  password: z.string().min(6, 'Le mot de passe doit comporter au moins 6 caractères.'),
+});
+
 export const settingsSchema = z.object({
   id: z.string().default('default'),
   geminiPromptIA: z.string(),
