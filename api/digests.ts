@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { createDigestSchema } from '../src/utils/validation';
 import type { DayGroup, DigestCategory } from '../src/types/veyl';
+import { getRequestUserId } from './_auth';
 
 const prisma = new PrismaClient();
 
@@ -19,8 +20,11 @@ export interface VercelResponse extends ServerResponse {
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   try {
+    const userId = getRequestUserId(req);
+
     if (req.method === 'GET') {
       const allDigests = await prisma.digest.findMany({
+        where: { userId },
         orderBy: { createdAt: 'desc' },
       });
 
@@ -63,7 +67,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         res.status(400).json({ error: parsed.error.issues[0]?.message || 'Données invalides.' });
         return;
       }
-      const created = await prisma.digest.create({ data: parsed.data });
+      const created = await prisma.digest.create({
+        data: {
+          ...parsed.data,
+          userId,
+        },
+      });
       res.status(201).json({ id: created.id, digest: created });
       return;
     }

@@ -1,17 +1,20 @@
 import { PrismaClient } from '@prisma/client';
 import { updateSettingsSchema } from '../src/utils/validation';
 import type { VercelRequest, VercelResponse } from './digests';
+import { getRequestUserId } from './_auth';
 
 const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   try {
+    const userId = getRequestUserId(req);
+
     if (req.method === 'GET') {
-      let settings = await prisma.settings.findUnique({ where: { id: 'default' } });
+      let settings = await prisma.settings.findUnique({ where: { userId } });
       if (!settings) {
         settings = await prisma.settings.create({
           data: {
-            id: 'default',
+            userId,
             geminiPromptIA:
               'Tu es un expert en intelligence artificielle. Résume les actualités et nouveautés IA marquantes avec des puces claires et concises.',
             geminiPromptLux:
@@ -22,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           },
         });
       }
-      res.status(200).json({ settings, ...settings });
+      res.status(200).json({ settings, ...settings, id: settings.userId });
       return;
     }
 
@@ -34,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       }
 
       const updated = await prisma.settings.upsert({
-        where: { id: 'default' },
+        where: { userId },
         update: {
           geminiPromptIA: parsed.data.geminiPromptIA,
           geminiPromptLux: parsed.data.geminiPromptLux,
@@ -44,14 +47,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
             : {}),
         },
         create: {
-          id: 'default',
+          userId,
           geminiPromptIA: parsed.data.geminiPromptIA,
           geminiPromptLux: parsed.data.geminiPromptLux,
           geminiPromptTech: parsed.data.geminiPromptTech,
           cronEnabled: parsed.data.cronEnabled ?? true,
         },
       });
-      res.status(200).json({ settings: updated, ...updated });
+      res.status(200).json({ settings: updated, ...updated, id: updated.userId });
       return;
     }
 

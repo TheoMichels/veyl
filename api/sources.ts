@@ -5,13 +5,19 @@ import {
   deleteSourceSchema,
 } from '../src/utils/validation';
 import type { VercelRequest, VercelResponse } from './digests';
+import { getRequestUserId } from './_auth';
 
 const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   try {
+    const userId = getRequestUserId(req);
+
     if (req.method === 'GET') {
-      const sources = await prisma.source.findMany({ orderBy: { id: 'asc' } });
+      const sources = await prisma.source.findMany({
+        where: { userId },
+        orderBy: { id: 'asc' },
+      });
       res.status(200).json({ sources });
       return;
     }
@@ -23,13 +29,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         return;
       }
 
-      const existing = await prisma.source.findUnique({ where: { url: parsed.data.url } });
+      const existing = await prisma.source.findUnique({
+        where: { userId_url: { userId, url: parsed.data.url } },
+      });
       if (existing) {
         await prisma.source.delete({ where: { id: existing.id } });
       }
 
       const source = await prisma.source.create({
         data: {
+          userId,
           name: parsed.data.name,
           url: parsed.data.url,
           category: parsed.data.category,

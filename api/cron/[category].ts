@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale';
 import { fetchFeed } from '../../src/lib/rss';
 import { analyzeGlobalFeed } from '../../src/lib/gemini';
 import type { VercelRequest, VercelResponse } from '../digests';
+import { getRequestUserId } from '../_auth';
 
 const prisma = new PrismaClient();
 
@@ -15,6 +16,7 @@ const categoryMap: Record<string, 'IA' | 'Luxembourg' | 'Tech'> = {
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   try {
+    const userId = getRequestUserId(req);
     const rawCat = req.query?.category;
     const slug = (Array.isArray(rawCat) ? rawCat[0] : rawCat || '').toLowerCase();
     const category = categoryMap[slug];
@@ -24,14 +26,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       return;
     }
 
-    const settings = await prisma.settings.findUnique({ where: { id: 'default' } });
+    const settings = await prisma.settings.findUnique({ where: { userId } });
     if (!settings || !settings.cronEnabled) {
       res.status(200).json({ message: 'Cron désactivé dans les paramètres.' });
       return;
     }
 
     const sources = await prisma.source.findMany({
-      where: { isActive: true, category },
+      where: { userId, isActive: true, category },
     });
 
     if (sources.length === 0) {
@@ -41,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     const now = new Date();
     const lastDigest = await prisma.digest.findFirst({
-      where: { category },
+      where: { userId, category },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -85,6 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     await prisma.digest.create({
       data: {
+        userId,
         category,
         title,
         content: digestContent,
