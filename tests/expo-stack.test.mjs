@@ -195,20 +195,22 @@ test('AC-08: prisma/schema.prisma, .gitignore et vercel.json préservent la comp
   }
 });
 
-test('AC-02: src/theme/colors.ts expose getThemeColors et getThemeGradient (Clair/Sombre, palette Indigo/Violet)', async () => {
+test('AC-02 & L2: src/theme/colors.ts expose la structure complète des tokens conforme à stack-target.md §2', async () => {
   const colorsPath = path.join(rootDir, 'src', 'theme', 'colors.ts');
   assert.ok(fs.existsSync(colorsPath), 'src/theme/colors.ts doit exister');
 
   const colorsContent = fs.readFileSync(colorsPath, 'utf8');
   assert.match(colorsContent, /export\s+function\s+getThemeColors/, 'getThemeColors doit être exporté');
   assert.match(colorsContent, /export\s+function\s+getThemeGradient/, 'getThemeGradient doit être exporté');
+  assert.match(colorsContent, /export\s+const\s+gradient\s*=/, 'gradient doit être exporté');
+  assert.match(colorsContent, /export\s+const\s+colors\s*=/, 'colors doit être exporté');
+  assert.match(colorsContent, /export\s+const\s+radius\s*=/, 'radius doit être exporté');
+  assert.match(colorsContent, /export\s+const\s+shadows\s*=/, 'shadows doit être exporté');
 
-  // Vérification par import dynamique si Node supporte le stripping TS ou par inspection + évaluation
   let mod = null;
   try {
     mod = await import(path.FileUrl ? path.FileUrl(colorsPath) : `file://${colorsPath}`);
   } catch {
-    // Fallback si la version de Node nécessite le contrôle sur le source TS directement
     mod = null;
   }
 
@@ -228,10 +230,28 @@ test('AC-02: src/theme/colors.ts expose getThemeColors et getThemeGradient (Clai
     assert.equal(lightGrad.length, 3);
     assert.equal(darkGrad.length, 3);
     assert.notDeepEqual(lightGrad, darkGrad);
+
+    // Vérification des tokens §2 obligatoires
+    assert.ok(mod.gradient && Array.isArray(mod.gradient.colors), 'gradient.colors doit être un tableau');
+    assert.equal(mod.gradient.colors.length, 4, 'gradient doit comporter 4 teintes proches');
+    assert.ok(mod.colors, 'colors doit être exporté');
+    assert.equal(mod.colors.brand, '#4F46E5', 'colors.brand doit valoir #4F46E5');
+    assert.ok(mod.colors.panel, 'colors.panel doit être défini');
+    assert.ok(mod.radius, 'radius doit être exporté');
+    assert.equal(mod.radius.sm, 12, 'radius.sm doit valoir 12');
+    assert.equal(mod.radius.md, 16, 'radius.md doit valoir 16');
+    assert.equal(mod.radius.lg, 20, 'radius.lg doit valoir 20');
+    assert.equal(mod.radius.xl, 24, 'radius.xl doit valoir 24');
+    assert.ok(mod.shadows && mod.shadows.sm, 'shadows.sm doit être défini');
+    assert.ok(mod.shadows.md, 'shadows.md doit être défini');
+    assert.ok(mod.shadows.lg, 'shadows.lg doit être défini');
   } else {
     assert.match(colorsContent, /primary:\s*'#4F46E5'/);
     assert.match(colorsContent, /accentViolet:\s*'#7C3AED'/);
     assert.match(colorsContent, /primary:\s*'#6366F1'/);
     assert.match(colorsContent, /accentViolet:\s*'#8B5CF6'/);
+    assert.match(colorsContent, /brand:\s*'#4F46E5'/);
+    assert.match(colorsContent, /panel:\s*'rgba\(255,\s*255,\s*255,\s*0\.82\)'/);
+    assert.match(colorsContent, /sm:\s*12/);
   }
 });

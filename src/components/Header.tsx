@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, useWindowDimensions, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { radii, spacing, type ThemeColors } from '../theme/colors';
+import { radius, spacing, type ThemeColors } from '../theme/colors';
 import type { ThemeMode, ViewMode } from '../types/veyl';
 
 interface HeaderProps {
@@ -27,51 +27,49 @@ export default function Header({
     <View
       style={[
         styles.header,
-        isMobile && styles.headerMobile,
         {
           backgroundColor: colors.headerBg,
           borderBottomColor: colors.border,
         },
       ]}
     >
-      <View style={styles.inner}>
+      <View style={[styles.inner, isMobile ? styles.innerMobile : styles.innerDesktop]}>
         <Pressable
           testID="nav-home-btn"
           onPress={() => onNavigate('dashboard')}
           style={styles.brandButton}
           accessibilityRole="button"
-          accessibilityLabel="Retour à l'accueil Veyl"
+          accessibilityLabel="Veyl - Accueil"
         >
           <LinearGradient
-            colors={[colors.primary, colors.accentViolet]}
+            colors={['#6366F1', '#9333EA']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[styles.logoBadge, isMobile && styles.logoBadgeMobile]}
+            style={styles.logoBadge}
           >
-            <Svg width={isMobile ? 18 : 20} height={isMobile ? 18 : 20} viewBox="0 0 24 24" fill="none">
+            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
               <Circle cx="12" cy="12" r="9" stroke="#FFFFFF" strokeWidth="2" strokeOpacity="0.45" />
               <Circle cx="12" cy="12" r="5" stroke="#FFFFFF" strokeWidth="2" strokeOpacity="0.75" />
               <Circle cx="12" cy="12" r="2" fill="#FFFFFF" />
               <Path d="M12 12L18.5 5.5" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" />
             </Svg>
           </LinearGradient>
-          <View style={styles.brandTextBlock}>
-            <Text style={[styles.brandTitle, { color: colors.primary }]}>Veyl</Text>
-            {!isMobile && (
-              <Text style={[styles.brandSubtitle, { color: colors.textMuted }]}>
-                Veille Stratégique & IA
-              </Text>
-            )}
-          </View>
+          <Text
+            style={[
+              styles.brandTitle,
+              { color: themeMode === 'dark' ? '#818CF8' : '#4F46E5' },
+            ]}
+          >
+            Veyl
+          </Text>
         </Pressable>
 
-        <View style={[styles.actions, isMobile && styles.actionsMobile]}>
+        <View style={styles.actions}>
           <Pressable
             testID="theme-toggle-btn"
             onPress={onToggleTheme}
             style={[
               styles.iconButton,
-              isMobile && styles.iconButtonMobile,
               {
                 backgroundColor: colors.surfaceMuted,
                 borderColor: colors.border,
@@ -83,7 +81,7 @@ export default function Header({
             }
           >
             {themeMode === 'dark' ? (
-              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
                 <Circle cx="12" cy="12" r="4" stroke={colors.warning} strokeWidth="2" />
                 <Path
                   d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
@@ -93,25 +91,16 @@ export default function Header({
                 />
               </Svg>
             ) : (
-              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
                 <Path
                   d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
-                  stroke={colors.primary}
+                  stroke={colors.textSecondary}
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </Svg>
             )}
-            <Text
-              style={[
-                styles.buttonLabel,
-                isMobile && styles.buttonLabelMobile,
-                { color: colors.textSecondary },
-              ]}
-            >
-              {themeMode === 'dark' ? 'Clair' : 'Sombre'}
-            </Text>
           </Pressable>
 
           <Pressable
@@ -119,17 +108,17 @@ export default function Header({
             onPress={() => onNavigate(viewMode === 'settings' ? 'dashboard' : 'settings')}
             style={[
               styles.iconButton,
-              isMobile && styles.iconButtonMobile,
               {
                 backgroundColor:
                   viewMode === 'settings' ? colors.primarySoft : colors.surfaceMuted,
-                borderColor: viewMode === 'settings' ? colors.primaryBorder : colors.border,
+                borderColor:
+                  viewMode === 'settings' ? colors.primaryBorder : colors.border,
               },
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Paramètres de veille"
+            accessibilityLabel="Paramètres"
           >
-            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
               <Circle
                 cx="12"
                 cy="12"
@@ -145,17 +134,6 @@ export default function Header({
                 strokeLinejoin="round"
               />
             </Svg>
-            <Text
-              style={[
-                styles.buttonLabel,
-                isMobile && styles.buttonLabelMobile,
-                {
-                  color: viewMode === 'settings' ? colors.primary : colors.textSecondary,
-                },
-              ]}
-            >
-              Paramètres
-            </Text>
           </Pressable>
         </View>
       </View>
@@ -166,80 +144,55 @@ export default function Header({
 const styles = StyleSheet.create({
   header: {
     borderBottomWidth: 1,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
     width: '100%',
-  },
-  headerMobile: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
+    zIndex: 10,
   },
   inner: {
-    maxWidth: 1360,
     width: '100%',
-    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.sm,
+    height: 64,
+  },
+  innerDesktop: {
+    paddingHorizontal: spacing.xl,
+  },
+  innerMobile: {
+    paddingHorizontal: spacing.lg,
   },
   brandButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    flexShrink: 1,
-  },
-  brandTextBlock: {
-    flexShrink: 1,
+    gap: 10,
   },
   logoBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoBadgeMobile: {
     width: 32,
     height: 32,
+    borderRadius: radius.sm, // 12
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   brandTitle: {
-    fontSize: 21,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  brandSubtitle: {
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: -0.8,
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    flexShrink: 0,
-  },
-  actionsMobile: {
-    gap: 6,
   },
   iconButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: radii.md,
+    width: 36,
+    height: 36,
+    borderRadius: 8,
     borderWidth: 1,
-  },
-  iconButtonMobile: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    gap: 4,
-  },
-  buttonLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  buttonLabelMobile: {
-    fontSize: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

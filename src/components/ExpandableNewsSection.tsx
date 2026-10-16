@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { fetchGoFurther } from '../services/aiService';
-import { radii, spacing, type ThemeColors } from '../theme/colors';
+import { radius, spacing, type ThemeColors } from '../theme/colors';
 
 interface ExpandableNewsSectionProps {
   content: string;
@@ -132,7 +132,7 @@ function renderFormattedInlineText(
       return (
         <Text
           key={idx}
-          style={[styles.linkText, { color: colors.primary }]}
+          style={[styles.linkText, { color: colors.brand }]}
           onPress={() => {
             Linking.openURL(url).catch(() => {});
           }}
@@ -212,21 +212,21 @@ export default function ExpandableNewsSection({
           {
             backgroundColor: colors.primarySoft,
             borderColor: colors.primaryBorder,
-            borderLeftColor: colors.primary,
+            borderLeftColor: colors.brand,
           },
         ]}
       >
         <View style={[styles.expandedHeader, { borderBottomColor: colors.primaryBorder }]}>
           <View style={styles.expandedBadgeRow}>
-            <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
+            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
               <Path
-                d="M12 3l1.9 5.8h6.1l-4.9 3.6 1.9 5.8-5-3.6-5 3.6 1.9-5.8-4.9-3.6h6.1L12 3z"
-                stroke={colors.primary}
+                d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+                stroke={colors.brand}
                 strokeWidth="2"
                 strokeLinejoin="round"
               />
             </Svg>
-            <Text style={[styles.expandedBadgeText, { color: colors.primary }]}>
+            <Text style={[styles.expandedBadgeText, { color: colors.brand }]}>
               Approfondissement IA
             </Text>
           </View>
@@ -236,18 +236,21 @@ export default function ExpandableNewsSection({
             onPress={() => setActiveIndex(null)}
             style={[styles.closeButton, { backgroundColor: colors.surface }]}
             accessibilityRole="button"
-            accessibilityLabel="Fermer l'approfondissement"
+            accessibilityLabel="Fermer"
           >
+            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+              <Path d="M18 6L6 18M6 6l12 12" stroke={colors.textSecondary} strokeWidth="2" strokeLinecap="round" />
+            </Svg>
             <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>
-              ✕ Fermer
+              Fermer
             </Text>
           </Pressable>
         </View>
 
         {isLoading && (
           <View style={styles.loadingRow}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.primary }]}>
+            <ActivityIndicator size="small" color={colors.brand} />
+            <Text style={[styles.loadingText, { color: colors.brand }]}>
               Recherche et synthèse en cours...
             </Text>
           </View>
@@ -289,25 +292,12 @@ export default function ExpandableNewsSection({
   return (
     <View style={styles.container}>
       {sections.map((section, sIdx) => (
-        <View
-          key={sIdx}
-          style={[
-            styles.sectionBlock,
-            {
-              backgroundColor: colors.surfaceMuted,
-              borderColor: colors.borderSubtle,
-            },
-          ]}
-        >
-          {(section.title || section.sectionActionIndex !== null) && (
-            <View style={styles.sectionHeaderRow}>
-              {section.title ? (
-                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                  {section.title}
-                </Text>
-              ) : (
-                <View style={{ flex: 1 }} />
-              )}
+        <View key={sIdx} style={styles.sectionBlock}>
+          {section.title ? (
+            <View style={styles.sectionHeadingRow}>
+              <Text style={[styles.sectionHeadingText, { color: colors.textPrimary }]}>
+                {section.title}
+              </Text>
               {section.sectionActionIndex !== null && (
                 <Pressable
                   testID={`go-further-btn-${section.sectionActionIndex}`}
@@ -318,10 +308,13 @@ export default function ExpandableNewsSection({
                     )
                   }
                   style={[
-                    styles.sparkleButton,
+                    styles.sparkleBtn,
                     {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.primaryBorder,
+                      backgroundColor:
+                        activeIndex === section.sectionActionIndex
+                          ? colors.primarySoft
+                          : colors.surface,
+                      borderColor: colors.border,
                     },
                   ]}
                   accessibilityRole="button"
@@ -329,22 +322,19 @@ export default function ExpandableNewsSection({
                 >
                   <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
                     <Path
-                      d="M12 3l1.9 5.8h6.1l-4.9 3.6 1.9 5.8-5-3.6-5 3.6 1.9-5.8-4.9-3.6h6.1L12 3z"
-                      stroke={colors.primary}
+                      d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+                      stroke={colors.brand}
                       strokeWidth="2"
                       strokeLinejoin="round"
                     />
                   </Svg>
-                  <Text style={[styles.sparkleButtonLabel, { color: colors.primary }]}>
-                    Aller plus loin
-                  </Text>
                 </Pressable>
               )}
             </View>
-          )}
+          ) : null}
 
           {section.paragraphs.map((p, pIdx) => (
-            <Text key={pIdx} style={[styles.paragraph, { color: colors.textSecondary }]}>
+            <Text key={pIdx} style={[styles.paragraphText, { color: colors.textSecondary }]}>
               {renderFormattedInlineText(p, colors)}
             </Text>
           ))}
@@ -358,46 +348,40 @@ export default function ExpandableNewsSection({
               : bullet.rawText;
 
             return (
-              <View key={bullet.id} style={styles.bulletBlock}>
-                <View style={styles.bulletRow}>
-                  <View
-                    style={[styles.bulletDot, { backgroundColor: colors.primary }]}
-                  />
-                  <View style={styles.bulletTextWrapper}>
+              <View key={bullet.id} style={styles.bulletItem}>
+                <View style={styles.bulletContentRow}>
+                  <Text style={[styles.bulletDotChar, { color: colors.textMuted }]}>•</Text>
+                  <View style={styles.bulletTextAndBtn}>
                     <Text style={[styles.bulletText, { color: colors.textSecondary }]}>
-                      {renderFormattedInlineText(bullet.rawText, colors)}
+                      {renderFormattedInlineText(bullet.rawText, colors)}{' '}
+                      {bullet.actionIndex !== null && (
+                        <Pressable
+                          testID={`go-further-btn-${bullet.actionIndex}`}
+                          onPress={() => handleTriggerGoFurther(bullet.actionIndex!, query)}
+                          style={[
+                            styles.inlineSparkleBtn,
+                            {
+                              backgroundColor:
+                                activeIndex === bullet.actionIndex
+                                  ? colors.primarySoft
+                                  : colors.surface,
+                              borderColor: colors.border,
+                            },
+                          ]}
+                          accessibilityRole="button"
+                          accessibilityLabel="Aller plus loin"
+                        >
+                          <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
+                            <Path
+                              d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+                              stroke={colors.brand}
+                              strokeWidth="2"
+                              strokeLinejoin="round"
+                            />
+                          </Svg>
+                        </Pressable>
+                      )}
                     </Text>
-
-                    {bullet.actionIndex !== null && (
-                      <Pressable
-                        testID={`go-further-btn-${bullet.actionIndex}`}
-                        onPress={() => handleTriggerGoFurther(bullet.actionIndex!, query)}
-                        style={[
-                          styles.sparkleButton,
-                          {
-                            backgroundColor:
-                              activeIndex === bullet.actionIndex
-                                ? colors.primarySoft
-                                : colors.surface,
-                            borderColor: colors.primaryBorder,
-                          },
-                        ]}
-                        accessibilityRole="button"
-                        accessibilityLabel="Aller plus loin sur ce point"
-                      >
-                        <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
-                          <Path
-                            d="M12 3l1.9 5.8h6.1l-4.9 3.6 1.9 5.8-5-3.6-5 3.6 1.9-5.8-4.9-3.6h6.1L12 3z"
-                            stroke={colors.primary}
-                            strokeWidth="2"
-                            strokeLinejoin="round"
-                          />
-                        </Svg>
-                        <Text style={[styles.sparkleButtonLabel, { color: colors.primary }]}>
-                          Aller plus loin
-                        </Text>
-                      </Pressable>
-                    )}
                   </View>
                 </View>
 
@@ -413,51 +397,64 @@ export default function ExpandableNewsSection({
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.md,
+    gap: spacing.lg,
   },
   sectionBlock: {
-    padding: spacing.lg,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
-  sectionHeaderRow: {
+  sectionHeadingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.sm,
-    marginBottom: 4,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
   },
-  sectionTitle: {
-    fontSize: 17,
+  sectionHeadingText: {
+    fontSize: 18,
     fontWeight: '700',
     flex: 1,
   },
-  paragraph: {
-    fontSize: 14,
-    lineHeight: 22,
+  paragraphText: {
+    fontSize: 15,
+    lineHeight: 24,
+    marginBottom: spacing.sm,
   },
-  bulletBlock: {
-    marginTop: 6,
+  bulletItem: {
+    marginVertical: 4,
   },
-  bulletRow: {
+  bulletContentRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  bulletDot: {
-    width: 6,
-    height: 6,
-    borderRadius: radii.pill,
-    marginTop: 8,
-  },
-  bulletTextWrapper: {
-    flex: 1,
     gap: 8,
   },
-  bulletText: {
-    fontSize: 14,
+  bulletDotChar: {
+    fontSize: 18,
     lineHeight: 22,
+  },
+  bulletTextAndBtn: {
+    flex: 1,
+  },
+  bulletText: {
+    fontSize: 15,
+    lineHeight: 24,
+  },
+  inlineSparkleBtn: {
+    display: 'inline-flex' as any,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    marginLeft: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    verticalAlign: 'middle',
+  },
+  sparkleBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 6,
+    borderRadius: 6,
+    borderWidth: 1,
   },
   boldText: {
     fontWeight: '700',
@@ -467,26 +464,13 @@ const styles = StyleSheet.create({
   },
   linkText: {
     textDecorationLine: 'underline',
-    fontWeight: '600',
-  },
-  sparkleButton: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-  },
-  sparkleButtonLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   expandedCard: {
-    marginTop: spacing.sm,
+    marginTop: 10,
+    marginBottom: 8,
     padding: spacing.md,
-    borderRadius: radii.md,
+    borderRadius: radius.sm, // 12
     borderWidth: 1,
     borderLeftWidth: 4,
     gap: spacing.sm,
@@ -508,9 +492,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   closeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: radii.sm,
+    borderRadius: 6,
   },
   closeButtonText: {
     fontSize: 11,
@@ -528,7 +515,7 @@ const styles = StyleSheet.create({
   },
   errorBox: {
     padding: spacing.sm,
-    borderRadius: radii.sm,
+    borderRadius: 6,
     borderWidth: 1,
   },
   errorBoxText: {

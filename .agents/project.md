@@ -30,7 +30,8 @@
 - Appels IA : `src/services/aiService.ts` → API.
 
 ## Design
-- Tokens `src/theme/colors.ts` · Indigo `#4F46E5` / Violet `#7C3AED` · modes clair et sombre · `testID` kebab-case.
+- Tokens §2 `src/theme/colors.ts` (gradient, brand `#4F46E5`, panel, radius 12–24, shadows sm/md/lg) · clair & sombre · testID kebab-case.
+- DA radar gradient indigo/violet alignée sur main · surfaces translucides · onglets IA/Lux/Tech · approfondissements IA.
 
 ## Zones sensibles et déploiement
 - Déploiement Vercel (fonctions + crons). Clé Gemini et base Postgres côté serveur uniquement.

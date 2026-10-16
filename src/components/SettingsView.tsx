@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   useWindowDimensions,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import {
   getSettings,
@@ -18,7 +19,7 @@ import {
   toggleSourceStatus,
   removeSource,
 } from '../storage/sourceRepository';
-import { radii, spacing, shadows, type ThemeColors } from '../theme/colors';
+import { radius, spacing, shadows, type ThemeColors } from '../theme/colors';
 import type { DigestCategory, Source } from '../types/veyl';
 
 interface SettingsViewProps {
@@ -167,7 +168,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
           Paramètres de Veille
         </Text>
         <Text style={[styles.pageSubtitle, { color: colors.textMuted }]}>
-          Gérez vos sources RSS et personnalisez les instructions d&apos;analyse Gemini.
+          Gérez vos sources RSS et les instructions de l&apos;IA (Option B).
         </Text>
       </View>
 
@@ -193,12 +194,12 @@ export default function SettingsView({ colors }: SettingsViewProps) {
           style={[
             styles.banner,
             {
-              backgroundColor: colors.successSoft,
-              borderColor: colors.success,
+              backgroundColor: colors.positiveSoft,
+              borderColor: colors.positive,
             },
           ]}
         >
-          <Text style={[styles.bannerText, { color: colors.success }]}>
+          <Text style={[styles.bannerText, { color: colors.positive }]}>
             {successMessage}
           </Text>
         </View>
@@ -206,14 +207,14 @@ export default function SettingsView({ colors }: SettingsViewProps) {
 
       {isLoading ? (
         <View style={styles.loadingBox}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.brand} />
           <Text style={[styles.loadingLabel, { color: colors.textMuted }]}>
             Chargement de la configuration...
           </Text>
         </View>
       ) : (
-        <>
-          {/* Section 1 : Prompts Gemini */}
+        <View style={styles.sectionsWrapper}>
+          {/* Section 1 : Prompts Gemini (Instructions) */}
           <View
             style={[
               styles.card,
@@ -230,7 +231,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
 
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>
-                Prompt pour la catégorie « IA »
+                Prompt pour la catégorie &quot;IA&quot;
               </Text>
               <TextInput
                 testID="prompt-ia-input"
@@ -239,7 +240,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                 multiline
                 numberOfLines={4}
                 style={[
-                  styles.textArea,
+                  styles.textAreaMonospace,
                   {
                     backgroundColor: colors.surfaceMuted,
                     borderColor: colors.border,
@@ -253,7 +254,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
 
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>
-                Prompt pour la catégorie « Luxembourg »
+                Prompt pour la catégorie &quot;Luxembourg&quot;
               </Text>
               <TextInput
                 testID="prompt-lux-input"
@@ -262,7 +263,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                 multiline
                 numberOfLines={4}
                 style={[
-                  styles.textArea,
+                  styles.textAreaMonospace,
                   {
                     backgroundColor: colors.surfaceMuted,
                     borderColor: colors.border,
@@ -276,7 +277,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
 
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>
-                Prompt pour la catégorie « Tech »
+                Prompt pour la catégorie &quot;Tech&quot;
               </Text>
               <TextInput
                 testID="prompt-tech-input"
@@ -285,7 +286,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                 multiline
                 numberOfLines={4}
                 style={[
-                  styles.textArea,
+                  styles.textAreaMonospace,
                   {
                     backgroundColor: colors.surfaceMuted,
                     borderColor: colors.border,
@@ -304,15 +305,15 @@ export default function SettingsView({ colors }: SettingsViewProps) {
               }}
               disabled={isSavingSettings}
               style={[
-                styles.primaryButton,
+                styles.saveBtn,
                 {
-                  backgroundColor: colors.primary,
-                  opacity: isSavingSettings ? 0.7 : 1,
+                  backgroundColor: colors.brand,
+                  opacity: isSavingSettings ? 0.6 : 1,
                 },
               ]}
               accessibilityRole="button"
             >
-              <Text style={styles.primaryButtonText}>
+              <Text style={styles.saveBtnText}>
                 {isSavingSettings
                   ? 'Sauvegarde en cours...'
                   : 'Sauvegarder les instructions'}
@@ -320,7 +321,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
             </Pressable>
           </View>
 
-          {/* Section 2 : Sources RSS */}
+          {/* Section 2 : Sources d'actualités (Flux RSS) */}
           <View
             style={[
               styles.card,
@@ -338,70 +339,79 @@ export default function SettingsView({ colors }: SettingsViewProps) {
             <View style={styles.sourcesList}>
               {sources.length === 0 ? (
                 <Text style={[styles.emptySourcesText, { color: colors.textMuted }]}>
-                  Aucune source RSS configurée. Ajoutez votre premier flux ci-dessous.
+                  Aucune source RSS configurée.
                 </Text>
               ) : (
                 sources.map((source) => (
                   <View
                     key={source.id}
                     style={[
-                      styles.sourceRow,
-                      isMobile ? styles.sourceRowMobile : styles.sourceRowDesktop,
+                      styles.sourceCard,
+                      isMobile ? styles.sourceCardMobile : styles.sourceCardDesktop,
                       {
                         backgroundColor: colors.surfaceMuted,
-                        borderColor: colors.borderSubtle,
+                        borderColor: colors.border,
                       },
                     ]}
                   >
-                    <View style={styles.sourceInfo}>
-                      <View style={styles.sourceTitleLine}>
+                    <View style={styles.sourceDetails}>
+                      <View style={styles.sourceNameRow}>
                         <Text style={[styles.sourceName, { color: colors.textPrimary }]}>
                           {source.name}
                         </Text>
                         <View
                           style={[
-                            styles.categoryPill,
+                            styles.categoryBadge,
                             {
-                              backgroundColor: colors.primarySoft,
-                              borderColor: colors.primaryBorder,
+                              backgroundColor: colors.border,
                             },
                           ]}
                         >
-                          <Text style={[styles.categoryPillText, { color: colors.primary }]}>
+                          <Text
+                            style={[
+                              styles.categoryBadgeText,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
                             {source.category}
                           </Text>
                         </View>
                       </View>
                       <Text
-                        style={[styles.sourceUrl, { color: colors.textMuted }]}
+                        style={[styles.sourceUrlText, { color: colors.textMuted }]}
                         numberOfLines={1}
                       >
                         {source.url}
                       </Text>
                     </View>
 
-                    <View style={styles.sourceActions}>
+                    <View style={styles.sourceButtonsRow}>
                       <Pressable
                         testID={`toggle-source-${source.id}`}
                         onPress={() => {
                           handleToggleSource(source).catch(() => {});
                         }}
                         style={[
-                          styles.statusBadgeBtn,
+                          styles.toggleBtn,
                           {
                             backgroundColor: source.isActive
-                              ? colors.successSoft
-                              : colors.surface,
-                            borderColor: source.isActive ? colors.success : colors.border,
+                              ? colors.mode === 'dark'
+                                ? 'rgba(74, 222, 128, 0.15)'
+                                : '#DCFCE7'
+                              : colors.border,
                           },
                         ]}
                         accessibilityRole="button"
                       >
                         <Text
                           style={[
-                            styles.statusBadgeText,
+                            styles.toggleBtnText,
                             {
-                              color: source.isActive ? colors.success : colors.textMuted,
+                              color: source.isActive
+                                ? colors.mode === 'dark'
+                                  ? '#4ADE80'
+                                  : '#15803D'
+                                : colors.textMuted,
                             },
                           ]}
                         >
@@ -414,13 +424,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                         onPress={() => {
                           handleDeleteSource(source.id).catch(() => {});
                         }}
-                        style={[
-                          styles.deleteBtn,
-                          {
-                            backgroundColor: colors.dangerSoft,
-                            borderColor: colors.dangerBorder,
-                          },
-                        ]}
+                        style={styles.deleteBtn}
                         accessibilityRole="button"
                       >
                         <Text style={[styles.deleteBtnText, { color: colors.danger }]}>
@@ -433,21 +437,21 @@ export default function SettingsView({ colors }: SettingsViewProps) {
               )}
             </View>
 
-            {/* Formulaire d'ajout de source */}
+            {/* Formulaire d'ajout */}
             <View
               style={[
-                styles.addSourceBlock,
+                styles.addSourceSection,
                 { borderTopColor: colors.border },
               ]}
             >
-              <Text style={[styles.addSourceTitle, { color: colors.textPrimary }]}>
+              <Text style={[styles.addSourceHeading, { color: colors.textPrimary }]}>
                 Ajouter une nouvelle source
               </Text>
 
               <View
                 style={[
-                  styles.addSourceForm,
-                  isMobile ? styles.addSourceFormMobile : styles.addSourceFormDesktop,
+                  styles.addSourceFields,
+                  isMobile ? styles.addSourceFieldsMobile : styles.addSourceFieldsDesktop,
                 ]}
               >
                 <TextInput
@@ -457,7 +461,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                   placeholder="Nom du site"
                   placeholderTextColor={colors.textMuted}
                   style={[
-                    styles.input,
+                    styles.formInput,
                     {
                       backgroundColor: colors.surfaceMuted,
                       borderColor: colors.border,
@@ -470,11 +474,11 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                   testID="source-url-input"
                   value={newSourceUrl}
                   onChangeText={setNewSourceUrl}
-                  placeholder="URL du flux RSS (https://...)"
+                  placeholder="URL du flux RSS"
                   placeholderTextColor={colors.textMuted}
                   autoCapitalize="none"
                   style={[
-                    styles.input,
+                    styles.formInput,
                     {
                       backgroundColor: colors.surfaceMuted,
                       borderColor: colors.border,
@@ -487,17 +491,16 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                   testID="source-category-select"
                   onPress={cycleCategory}
                   style={[
-                    styles.categorySelectBtn,
+                    styles.categorySelect,
                     {
                       backgroundColor: colors.surfaceMuted,
                       borderColor: colors.border,
                     },
                   ]}
                   accessibilityRole="button"
-                  accessibilityLabel="Catégorie de la source"
                 >
-                  <Text style={[styles.categorySelectText, { color: colors.textPrimary }]}>
-                    Catégorie : {newSourceCategory}
+                  <Text style={[styles.categorySelectLabel, { color: colors.textPrimary }]}>
+                    {newSourceCategory}
                   </Text>
                 </Pressable>
 
@@ -508,22 +511,27 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                   }}
                   disabled={isAddingSource}
                   style={[
-                    styles.addBtn,
+                    styles.actionDarkBtn,
                     {
-                      backgroundColor: colors.primary,
-                      opacity: isAddingSource ? 0.7 : 1,
+                      backgroundColor: colors.mode === 'dark' ? '#E5E7EB' : '#1F2937',
+                      opacity: isAddingSource ? 0.6 : 1,
                     },
                   ]}
                   accessibilityRole="button"
                 >
-                  <Text style={styles.addBtnText}>
+                  <Text
+                    style={[
+                      styles.actionDarkBtnText,
+                      { color: colors.mode === 'dark' ? '#111827' : '#FFFFFF' },
+                    ]}
+                  >
                     {isAddingSource ? 'Ajout...' : 'Ajouter'}
                   </Text>
                 </Pressable>
               </View>
             </View>
           </View>
-        </>
+        </View>
       )}
     </View>
   );
@@ -532,27 +540,29 @@ export default function SettingsView({ colors }: SettingsViewProps) {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    maxWidth: 960,
+    maxWidth: 896, // max-w-4xl (56rem = 896px)
     alignSelf: 'center',
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
   headerBlock: {
-    gap: 4,
+    marginBottom: spacing.md,
   },
   pageTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '800',
+    letterSpacing: -0.5,
+    marginBottom: 6,
   },
   pageSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
   },
   banner: {
     padding: spacing.md,
-    borderRadius: radii.md,
+    borderRadius: radius.sm,
     borderWidth: 1,
   },
   bannerText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
   loadingBox: {
@@ -561,172 +571,186 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   loadingLabel: {
-    fontSize: 13,
+    fontSize: 14,
+  },
+  sectionsWrapper: {
+    gap: spacing.xl,
   },
   card: {
     padding: spacing.xl,
-    borderRadius: radii.lg,
+    borderRadius: radius.md, // 16
     borderWidth: 1,
-    gap: spacing.md,
+    gap: spacing.lg,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    marginBottom: 4,
+    letterSpacing: -0.3,
   },
   fieldGroup: {
     gap: 6,
   },
   fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '500',
   },
-  textArea: {
-    minHeight: 96,
+  textAreaMonospace: {
+    minHeight: 120,
     padding: spacing.md,
-    borderRadius: radii.md,
+    borderRadius: 8,
     borderWidth: 1,
     fontSize: 13,
+    fontFamily: Platform.select({
+      ios: 'Menlo',
+      android: 'monospace',
+      web: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    }),
     textAlignVertical: 'top',
   },
-  primaryButton: {
+  saveBtn: {
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 11,
-    borderRadius: radii.md,
-    marginTop: 4,
+    paddingVertical: 10,
+    borderRadius: 8,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  primaryButtonText: {
+  saveBtnText: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
   },
   sourcesList: {
     gap: spacing.sm,
   },
   emptySourcesText: {
-    fontSize: 13,
+    fontSize: 14,
     fontStyle: 'italic',
     paddingVertical: spacing.sm,
   },
-  sourceRow: {
-    padding: spacing.md,
-    borderRadius: radii.md,
+  sourceCard: {
+    padding: spacing.lg,
+    borderRadius: 8,
     borderWidth: 1,
     gap: spacing.md,
   },
-  sourceRowDesktop: {
+  sourceCardDesktop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  sourceRowMobile: {
+  sourceCardMobile: {
     flexDirection: 'column',
   },
-  sourceInfo: {
+  sourceDetails: {
     flex: 1,
     gap: 4,
   },
-  sourceTitleLine: {
+  sourceNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
   sourceName: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  categoryPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: radii.pill,
-    borderWidth: 1,
-  },
-  categoryPillText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  sourceUrl: {
-    fontSize: 12,
-  },
-  sourceActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  statusBadgeBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  deleteBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-  },
-  deleteBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  addSourceBlock: {
-    borderTopWidth: 1,
-    paddingTop: spacing.lg,
-    marginTop: spacing.sm,
-    gap: spacing.md,
-  },
-  addSourceTitle: {
     fontSize: 15,
-    fontWeight: '700',
-  },
-  addSourceForm: {
-    gap: spacing.sm,
-  },
-  addSourceFormDesktop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  addSourceFormMobile: {
-    flexDirection: 'column',
-  },
-  input: {
-    flex: 1,
-    minHeight: 42,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 9,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    fontSize: 13,
-  },
-  categorySelectBtn: {
-    minHeight: 42,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 9,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    justifyContent: 'center',
-  },
-  categorySelectText: {
-    fontSize: 13,
     fontWeight: '600',
   },
-  addBtn: {
-    minHeight: 42,
+  categoryBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+  },
+  categoryBadgeText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  sourceUrlText: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  sourceButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  toggleBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  toggleBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  deleteBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  deleteBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  addSourceSection: {
+    borderTopWidth: 1,
+    paddingTop: spacing.lg,
+    marginTop: spacing.xs,
+    gap: spacing.md,
+  },
+  addSourceHeading: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  addSourceFields: {
+    gap: spacing.sm,
+  },
+  addSourceFieldsDesktop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addSourceFieldsMobile: {
+    flexDirection: 'column',
+  },
+  formInput: {
+    flex: 1,
+    minHeight: 40,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 14,
+  },
+  categorySelect: {
+    minHeight: 40,
     paddingHorizontal: spacing.lg,
-    paddingVertical: 9,
-    borderRadius: radii.md,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addBtnText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
+  categorySelectLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  actionDarkBtn: {
+    minHeight: 40,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  actionDarkBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

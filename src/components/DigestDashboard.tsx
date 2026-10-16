@@ -12,7 +12,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Svg, { Path, Rect } from 'react-native-svg';
 import ExpandableNewsSection from './ExpandableNewsSection';
-import { radii, spacing, shadows, type ThemeColors } from '../theme/colors';
+import { radius, spacing, shadows, type ThemeColors } from '../theme/colors';
 import type { DayGroup, Digest, TabId } from '../types/veyl';
 
 interface DigestDashboardProps {
@@ -82,49 +82,18 @@ export default function DigestDashboard({
     return activeGroup.techDigest;
   }, [activeGroup, activeTab]);
 
-  const categoryMeta = useMemo(() => {
-    if (activeTab === 'ia') {
-      return {
-        label: 'Intelligence Artificielle',
-        shortLabel: 'IA',
-        accent: colors.categoryIA,
-        softBg: colors.categoryIASoft,
-      };
-    }
-    if (activeTab === 'lux') {
-      return {
-        label: 'Marché IT Luxembourg',
-        shortLabel: 'Luxembourg',
-        accent: colors.categoryLux,
-        softBg: colors.categoryLuxSoft,
-      };
-    }
-    return {
-      label: 'Tech & Hardware',
-      shortLabel: 'Tech',
-      accent: colors.categoryTech,
-      softBg: colors.categoryTechSoft,
-    };
-  }, [activeTab, colors]);
-
   return (
-    <View
-      style={[
-        styles.root,
-        isMobile ? styles.rootMobile : styles.rootDesktop,
-      ]}
-    >
-      {/* Panneau latéral (Desktop) ou En-tête d'historique (Mobile) */}
+    <View style={[styles.root, isMobile ? styles.rootMobile : styles.rootDesktop]}>
+      {/* Sidebar for dates */}
       {(isMobile || isSidebarOpen) && (
         <View
           style={[
             styles.sidebar,
             isMobile ? styles.sidebarMobile : styles.sidebarDesktop,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
+              borderRightColor: colors.border,
+              borderBottomColor: colors.border,
             },
-            shadows.card,
           ]}
         >
           <View style={styles.sidebarHeader}>
@@ -132,7 +101,7 @@ export default function DigestDashboard({
               Votre veille
             </Text>
             <Text style={[styles.sidebarSubtitle, { color: colors.textMuted }]}>
-              Les synthèses quotidiennes par catégorie.
+              Les synthèses par jour.
             </Text>
           </View>
 
@@ -145,8 +114,8 @@ export default function DigestDashboard({
             style={[
               styles.generateBtn,
               {
-                backgroundColor: isGenerating ? colors.primaryHover : colors.primary,
-                opacity: isGenerating ? 0.75 : 1,
+                backgroundColor: colors.brand,
+                opacity: isGenerating ? 0.6 : 1,
               },
             ]}
             accessibilityRole="button"
@@ -157,7 +126,28 @@ export default function DigestDashboard({
             ) : (
               <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
                 <Path
-                  d="M21 12a9 9 0 1 1-2.64-6.36L21 8M21 3v5h-5"
+                  d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M3 3v5h5"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M16 21h5v-5"
                   stroke="#FFFFFF"
                   strokeWidth="2"
                   strokeLinecap="round"
@@ -170,8 +160,9 @@ export default function DigestDashboard({
             </Text>
           </Pressable>
 
+          {/* Accordéon Mobile */}
           {isMobile ? (
-            <View style={styles.mobileHistorySection}>
+            <View style={styles.mobileHistoryBlock}>
               <Pressable
                 testID="mobile-history-trigger"
                 onPress={() => setIsMobileHistoryOpen((prev) => !prev)}
@@ -183,20 +174,25 @@ export default function DigestDashboard({
                   },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel="Afficher l'historique par date"
               >
-                <Text style={[styles.mobileAccordionLabel, { color: colors.textPrimary }]}>
-                  📅 {activeGroup ? activeGroup.displayDate : 'Sélectionner une date'}
-                </Text>
+                <View style={styles.mobileAccordionLeft}>
+                  <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                    <Rect x="3" y="4" width="18" height="18" rx="2" stroke={colors.textMuted} strokeWidth="2" />
+                    <Path d="M16 2v4M8 2v4M3 10h18" stroke={colors.textMuted} strokeWidth="2" strokeLinecap="round" />
+                  </Svg>
+                  <Text style={[styles.mobileAccordionText, { color: colors.textPrimary }]}>
+                    {activeGroup ? activeGroup.displayDate : 'Sélectionner une date'}
+                  </Text>
+                </View>
                 <Text style={[styles.mobileAccordionChevron, { color: colors.textMuted }]}>
                   {isMobileHistoryOpen ? '▲' : '▼'}
                 </Text>
               </Pressable>
 
               {isMobileHistoryOpen && (
-                <View style={styles.historyList}>
+                <View style={styles.historyListMobile}>
                   {filteredDigests.length === 0 ? (
-                    <Text style={[styles.noHistoryText, { color: colors.textMuted }]}>
+                    <Text style={[styles.noDigestsText, { color: colors.textMuted }]}>
                       Aucune veille disponible.
                     </Text>
                   ) : (
@@ -211,10 +207,9 @@ export default function DigestDashboard({
                             setIsMobileHistoryOpen(false);
                           }}
                           style={[
-                            styles.historyItem,
+                            styles.historyItemBtn,
                             {
-                              backgroundColor: active ? colors.primarySoft : 'transparent',
-                              borderColor: active ? colors.primaryBorder : 'transparent',
+                              backgroundColor: active ? colors.surfaceMuted : 'transparent',
                             },
                           ]}
                         >
@@ -222,7 +217,7 @@ export default function DigestDashboard({
                             style={[
                               styles.historyItemText,
                               {
-                                color: active ? colors.primary : colors.textSecondary,
+                                color: active ? colors.textPrimary : colors.textSecondary,
                                 fontWeight: active ? '700' : '500',
                               },
                             ]}
@@ -237,13 +232,21 @@ export default function DigestDashboard({
               )}
             </View>
           ) : (
-            <View style={styles.desktopHistorySection}>
-              <Text style={[styles.historyHeading, { color: colors.textMuted }]}>
-                HISTORIQUE
-              </Text>
+            /* Historique Desktop */
+            <View style={styles.desktopHistoryBlock}>
+              <View style={styles.historyHeaderRow}>
+                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                  <Rect x="3" y="4" width="18" height="18" rx="2" stroke={colors.textPrimary} strokeWidth="2" />
+                  <Path d="M16 2v4M8 2v4M3 10h18" stroke={colors.textPrimary} strokeWidth="2" strokeLinecap="round" />
+                </Svg>
+                <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>
+                  Historique
+                </Text>
+              </View>
+
               <ScrollView style={styles.historyScroll}>
                 {filteredDigests.length === 0 ? (
-                  <Text style={[styles.noHistoryText, { color: colors.textMuted }]}>
+                  <Text style={[styles.noDigestsText, { color: colors.textMuted }]}>
                     Aucune veille disponible.
                   </Text>
                 ) : (
@@ -255,10 +258,9 @@ export default function DigestDashboard({
                         testID={`history-date-${group.dateStr}`}
                         onPress={() => setSelectedDate(group.dateStr)}
                         style={[
-                          styles.historyItem,
+                          styles.historyItemBtn,
                           {
-                            backgroundColor: active ? colors.primarySoft : 'transparent',
-                            borderColor: active ? colors.primaryBorder : 'transparent',
+                            backgroundColor: active ? colors.surfaceMuted : 'transparent',
                           },
                         ]}
                       >
@@ -266,7 +268,7 @@ export default function DigestDashboard({
                           style={[
                             styles.historyItemText,
                             {
-                              color: active ? colors.primary : colors.textSecondary,
+                              color: active ? colors.textPrimary : colors.textSecondary,
                               fontWeight: active ? '700' : '500',
                             },
                           ]}
@@ -283,18 +285,18 @@ export default function DigestDashboard({
         </View>
       )}
 
-      {/* Zone principale */}
+      {/* Main Content Area */}
       <View style={styles.mainArea}>
-        {/* Barre d'outils et onglets */}
+        {/* Top Controls Row */}
         <View style={styles.topControlsRow}>
           {!isMobile && (
             <Pressable
               testID="sidebar-toggle-btn"
-              onPress={() => setIsSidebarOpen((prev) => !prev)}
+              onPress={() => setIsSidebarOpen(!isSidebarOpen)}
               style={[
                 styles.sidebarToggleBtn,
                 {
-                  backgroundColor: colors.surface,
+                  backgroundColor: colors.surfaceMuted,
                   borderColor: colors.border,
                 },
               ]}
@@ -304,25 +306,18 @@ export default function DigestDashboard({
               }
             >
               <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                <Rect
-                  x="3"
-                  y="3"
-                  width="18"
-                  height="18"
-                  rx="2"
-                  stroke={colors.textSecondary}
-                  strokeWidth="2"
-                />
+                <Rect x="3" y="3" width="18" height="18" rx="2" stroke={colors.textSecondary} strokeWidth="2" />
                 <Path d="M9 3v18" stroke={colors.textSecondary} strokeWidth="2" />
               </Svg>
             </Pressable>
           )}
 
+          {/* Onglets IA / Lux / Tech */}
           <View
             style={[
               styles.tabsContainer,
               {
-                backgroundColor: colors.surface,
+                backgroundColor: colors.surfaceMuted,
                 borderColor: colors.border,
               },
             ]}
@@ -331,24 +326,33 @@ export default function DigestDashboard({
               testID="tab-ia"
               onPress={() => handleTabChange('ia')}
               style={[
-                styles.tabButton,
-                activeTab === 'ia' && {
-                  backgroundColor: colors.categoryIASoft,
-                  borderColor: colors.primaryBorder,
-                },
+                styles.tabBtn,
+                activeTab === 'ia' && [
+                  styles.tabBtnActive,
+                  { backgroundColor: colors.surfaceActive },
+                  shadows.sm,
+                ],
               ]}
               accessibilityRole="tab"
             >
+              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+                  stroke={activeTab === 'ia' ? colors.brand : colors.textMuted}
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+              </Svg>
               <Text
                 style={[
-                  styles.tabLabel,
+                  styles.tabBtnText,
                   {
-                    color: activeTab === 'ia' ? colors.categoryIA : colors.textSecondary,
-                    fontWeight: activeTab === 'ia' ? '700' : '500',
+                    color: activeTab === 'ia' ? colors.brand : colors.textSecondary,
+                    fontWeight: activeTab === 'ia' ? '600' : '500',
                   },
                 ]}
               >
-                ✨ Intelligence Artificielle
+                Intelligence Artificielle
               </Text>
             </Pressable>
 
@@ -356,24 +360,26 @@ export default function DigestDashboard({
               testID="tab-lux"
               onPress={() => handleTabChange('lux')}
               style={[
-                styles.tabButton,
-                activeTab === 'lux' && {
-                  backgroundColor: colors.categoryLuxSoft,
-                  borderColor: colors.categoryLux,
-                },
+                styles.tabBtn,
+                activeTab === 'lux' && [
+                  styles.tabBtnActive,
+                  { backgroundColor: colors.surfaceActive },
+                  shadows.sm,
+                ],
               ]}
               accessibilityRole="tab"
             >
+              <Text style={styles.flagIcon}>🇱🇺</Text>
               <Text
                 style={[
-                  styles.tabLabel,
+                  styles.tabBtnText,
                   {
-                    color: activeTab === 'lux' ? colors.categoryLux : colors.textSecondary,
-                    fontWeight: activeTab === 'lux' ? '700' : '500',
+                    color: activeTab === 'lux' ? '#2563EB' : colors.textSecondary,
+                    fontWeight: activeTab === 'lux' ? '600' : '500',
                   },
                 ]}
               >
-                🇱🇺 Marché IT Luxembourg
+                Marché IT Luxembourg
               </Text>
             </Pressable>
 
@@ -381,30 +387,36 @@ export default function DigestDashboard({
               testID="tab-tech"
               onPress={() => handleTabChange('tech')}
               style={[
-                styles.tabButton,
-                activeTab === 'tech' && {
-                  backgroundColor: colors.categoryTechSoft,
-                  borderColor: colors.categoryTech,
-                },
+                styles.tabBtn,
+                activeTab === 'tech' && [
+                  styles.tabBtnActive,
+                  { backgroundColor: colors.surfaceActive },
+                  shadows.sm,
+                ],
               ]}
               accessibilityRole="tab"
             >
+              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                <Rect x="4" y="4" width="16" height="16" rx="2" stroke={activeTab === 'tech' ? '#059669' : colors.textMuted} strokeWidth="2" />
+                <Rect x="9" y="9" width="6" height="6" stroke={activeTab === 'tech' ? '#059669' : colors.textMuted} strokeWidth="2" />
+                <Path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" stroke={activeTab === 'tech' ? '#059669' : colors.textMuted} strokeWidth="2" strokeLinecap="round" />
+              </Svg>
               <Text
                 style={[
-                  styles.tabLabel,
+                  styles.tabBtnText,
                   {
-                    color: activeTab === 'tech' ? colors.categoryTech : colors.textSecondary,
-                    fontWeight: activeTab === 'tech' ? '700' : '500',
+                    color: activeTab === 'tech' ? '#059669' : colors.textSecondary,
+                    fontWeight: activeTab === 'tech' ? '600' : '500',
                   },
                 ]}
               >
-                ⚙️ Tech & Hardware
+                Tech & Hardware
               </Text>
             </Pressable>
           </View>
         </View>
 
-        {/* Bannière d'erreur éventuelle */}
+        {/* Bannière d'erreur */}
         {error ? (
           <View
             testID="error-banner"
@@ -430,7 +442,7 @@ export default function DigestDashboard({
           </View>
         ) : null}
 
-        {/* Carte principale de lecture */}
+        {/* Card de lecture principale */}
         <View
           style={[
             styles.digestCard,
@@ -441,41 +453,69 @@ export default function DigestDashboard({
             shadows.card,
           ]}
         >
+          {/* Header coloré selon catégorie */}
           <View
             style={[
               styles.digestCardHeader,
               {
-                backgroundColor: categoryMeta.softBg,
+                backgroundColor:
+                  activeTab === 'ia'
+                    ? colors.categoryIASoft
+                    : activeTab === 'lux'
+                    ? colors.categoryLuxSoft
+                    : colors.categoryTechSoft,
                 borderBottomColor: colors.border,
               },
             ]}
           >
-            <View style={styles.categoryBadgeRow}>
-              <View
-                style={[styles.categoryDot, { backgroundColor: categoryMeta.accent }]}
-              />
-              <Text style={[styles.categoryHeaderTitle, { color: colors.textPrimary }]}>
-                {categoryMeta.label}
-                {activeGroup ? ` — ${activeGroup.displayDate}` : ''}
+            <View style={styles.cardHeaderTitleRow}>
+              {activeTab === 'ia' ? (
+                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+                    stroke={colors.brand}
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+              ) : activeTab === 'lux' ? (
+                <Text style={styles.cardHeaderFlag}>🇱🇺</Text>
+              ) : (
+                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                  <Rect x="4" y="4" width="16" height="16" rx="2" stroke="#059669" strokeWidth="2" />
+                  <Rect x="9" y="9" width="6" height="6" stroke="#059669" strokeWidth="2" />
+                  <Path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
+                </Svg>
+              )}
+
+              <Text style={[styles.cardHeaderHeading, { color: colors.textPrimary }]}>
+                {activeTab === 'ia'
+                  ? 'Actualité IA'
+                  : activeTab === 'lux'
+                  ? 'Marché IT Luxembourg'
+                  : 'Actualité Tech'}
+                {activeGroup ? ` - ${activeGroup.displayDate}` : ''}
               </Text>
             </View>
           </View>
 
+          {/* Card Body */}
           <View style={styles.digestCardBody}>
             {isLoading ? (
-              <View style={styles.skeletonContainer}>
-                <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={[styles.skeletonText, { color: colors.textMuted }]}>
+              <View style={styles.loadingBox}>
+                <ActivityIndicator size="large" color={colors.brand} />
+                <Text style={[styles.loadingText, { color: colors.textMuted }]}>
                   Chargement des synthèses de veille...
                 </Text>
               </View>
             ) : !currentDigest ? (
-              <View testID="empty-state" style={styles.emptyState}>
-                <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>
-                  Aucune synthèse {categoryMeta.shortLabel} générée pour cette date.
-                </Text>
-                <Text style={[styles.emptyStateSubtitle, { color: colors.textMuted }]}>
-                  Lancez une génération quotidienne pour agréger les flux RSS actifs avec Gemini.
+              <View testID="empty-state" style={styles.emptyStateBox}>
+                <Text style={[styles.emptyStateText, { color: colors.textMuted }]}>
+                  {activeTab === 'ia'
+                    ? 'Aucune synthèse IA générée pour cette date.'
+                    : activeTab === 'lux'
+                    ? 'Aucune synthèse Luxembourg générée pour cette date.'
+                    : 'Aucune synthèse Tech générée pour cette date.'}
                 </Text>
               </View>
             ) : (
@@ -510,7 +550,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 1360,
     alignSelf: 'center',
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
   rootDesktop: {
     flexDirection: 'row',
@@ -520,151 +560,174 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   sidebar: {
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    padding: spacing.lg,
-    gap: spacing.md,
+    paddingBottom: spacing.lg,
   },
   sidebarDesktop: {
-    width: 272,
+    width: 256,
+    flexShrink: 0,
+    borderRightWidth: 1,
+    paddingRight: spacing.xl,
   },
   sidebarMobile: {
     width: '100%',
+    borderBottomWidth: 1,
   },
   sidebarHeader: {
-    gap: 4,
+    marginBottom: spacing.lg,
   },
   sidebarTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '800',
+    letterSpacing: -0.5,
   },
   sidebarSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
+    marginTop: 4,
   },
   generateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: 11,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.md,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.sm, // 12
+    marginBottom: spacing.xl,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   generateBtnText: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
   },
-  mobileHistorySection: {
+  mobileHistoryBlock: {
     gap: spacing.sm,
   },
   mobileAccordionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    borderRadius: radii.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
+    borderRadius: radius.sm,
     borderWidth: 1,
   },
-  mobileAccordionLabel: {
-    fontSize: 13,
+  mobileAccordionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  mobileAccordionText: {
+    fontSize: 14,
     fontWeight: '600',
   },
   mobileAccordionChevron: {
     fontSize: 12,
   },
-  desktopHistorySection: {
-    gap: spacing.xs,
+  historyListMobile: {
+    gap: 4,
     marginTop: spacing.xs,
   },
-  historyHeading: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    marginBottom: 4,
+  desktopHistoryBlock: {
+    gap: spacing.sm,
+  },
+  historyHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  historyTitle: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   historyScroll: {
-    maxHeight: 420,
+    maxHeight: 480,
   },
-  historyList: {
-    gap: 4,
-  },
-  noHistoryText: {
-    fontSize: 13,
-    fontStyle: 'italic',
-    paddingVertical: spacing.xs,
-  },
-  historyItem: {
+  historyItemBtn: {
+    width: '100%',
     paddingHorizontal: spacing.md,
-    paddingVertical: 9,
-    borderRadius: radii.sm,
-    borderWidth: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
     marginBottom: 4,
   },
   historyItemText: {
-    fontSize: 13,
+    fontSize: 14,
+  },
+  noDigestsText: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    paddingVertical: spacing.xs,
   },
   mainArea: {
     flex: 1,
-    width: '100%',
-    gap: spacing.md,
+    minWidth: 0,
+    gap: spacing.lg,
   },
   topControlsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    flexWrap: 'wrap',
+    gap: spacing.md,
+    width: '100%',
   },
   sidebarToggleBtn: {
     width: 40,
     height: 40,
-    borderRadius: radii.md,
+    borderRadius: 8,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tabsContainer: {
-    flex: 1,
     flexDirection: 'row',
+    alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 6,
-    padding: 5,
-    borderRadius: radii.md,
+    gap: 4,
+    padding: 4,
+    borderRadius: radius.sm,
     borderWidth: 1,
+    flex: 1,
   },
-  tabButton: {
-    flexGrow: 1,
-    minHeight: 38,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 7,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: 'transparent',
+  tabBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
-  tabLabel: {
-    fontSize: 13,
+  tabBtnActive: {
+    borderRadius: 8,
+  },
+  tabBtnText: {
+    fontSize: 14,
+  },
+  flagIcon: {
+    fontSize: 16,
+    lineHeight: 16,
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.md,
     padding: spacing.md,
-    borderRadius: radii.md,
+    borderRadius: radius.sm,
     borderWidth: 1,
   },
   errorBannerText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
   retryBtn: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    borderRadius: radii.sm,
+    paddingVertical: 4,
+    borderRadius: 6,
     borderWidth: 1,
   },
   retryBtnText: {
@@ -672,66 +735,60 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   digestCard: {
-    borderRadius: radii.lg,
+    borderRadius: radius.md, // 16
     borderWidth: 1,
     overflow: 'hidden',
+    flex: 1,
+    minHeight: 400,
   },
   digestCardHeader: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
   },
-  categoryBadgeRow: {
+  cardHeaderTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
-  categoryDot: {
-    width: 10,
-    height: 10,
-    borderRadius: radii.pill,
+  cardHeaderFlag: {
+    fontSize: 20,
+    lineHeight: 20,
   },
-  categoryHeaderTitle: {
-    fontSize: 16,
+  cardHeaderHeading: {
+    fontSize: 18,
     fontWeight: '700',
   },
   digestCardBody: {
-    padding: spacing.lg,
+    padding: spacing.xl,
+    flex: 1,
   },
-  skeletonContainer: {
+  loadingBox: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.xxl,
     gap: spacing.sm,
   },
-  skeletonText: {
-    fontSize: 13,
+  loadingText: {
+    fontSize: 14,
   },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xxl,
-    gap: spacing.xs,
+  emptyStateBox: {
+    paddingVertical: spacing.xl,
   },
-  emptyStateTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  emptyStateSubtitle: {
-    fontSize: 13,
-    textAlign: 'center',
-    maxWidth: 420,
+  emptyStateText: {
+    fontSize: 14,
+    fontStyle: 'italic',
   },
   digestContentWrapper: {
     gap: spacing.md,
   },
   digestTitle: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
   digestTimestamp: {
-    fontSize: 12,
-    marginBottom: spacing.xs,
+    fontSize: 14,
+    marginBottom: spacing.md,
   },
 });
