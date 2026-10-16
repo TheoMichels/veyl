@@ -28,7 +28,205 @@ export const test = base.extend<{ consoleErrors: string[] }>({
   ],
 });
 
-test.describe('Veyl — Parcours E2E Expo Web & SQLite Local', () => {
+test.describe('Veyl — Parcours E2E Expo Web statique & Mock API', () => {
+  let mockSettings = {
+    id: 'default',
+    geminiPromptIA: 'Tu es un expert IA de haut niveau chargé de synthétiser la veille technologique.',
+    geminiPromptLux: 'Tu es un analyste Tech & Business Luxembourg spécialisé dans le marché IT local.',
+    geminiPromptTech: 'Tu es un analyste Tech, Hardware & Infra de pointe.',
+    cronEnabled: true,
+  };
+
+  let mockSources: Array<{
+    id: string;
+    name: string;
+    url: string;
+    category: 'IA' | 'Luxembourg' | 'Tech';
+    isActive: boolean;
+  }> = [
+    {
+      id: 'source-1',
+      name: 'TechCrunch AI',
+      url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
+      category: 'IA',
+      isActive: true,
+    },
+  ];
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const initialIaDigest = {
+    id: 'digest-ia-1',
+    category: 'IA' as const,
+    title: 'Synthèse IA du jour — Test E2E',
+    content: '## Modèles & Agents\n* **Nouvelle avancée en IA générative** : Les modèles multimodaux progressent rapidement sur le raisonnement complexe.',
+    createdAt: new Date().toISOString(),
+  };
+
+  const initialLuxDigest = {
+    id: 'digest-lux-1',
+    category: 'Luxembourg' as const,
+    title: 'Synthèse Luxembourg du jour — Test E2E',
+    content: '## Marché & Emploi IT\n* **Forte demande de compétences cloud** : Les recrutements s’accélèrent au Luxembourg.',
+    createdAt: new Date().toISOString(),
+  };
+
+  const initialTechDigest = {
+    id: 'digest-tech-1',
+    category: 'Tech' as const,
+    title: 'Synthèse Tech du jour — Test E2E',
+    content: '## Hardware & Infrastructure\n* **Nouveaux accélérateurs neuronaux** : Des gains substantiels en efficacité énergétique.',
+    createdAt: new Date().toISOString(),
+  };
+
+  const mockGroupedDigests = [
+    {
+      dateStr: todayStr,
+      displayDate: "Aujourd'hui",
+      iaDigest: initialIaDigest,
+      luxDigest: initialLuxDigest,
+      techDigest: initialTechDigest,
+    },
+  ];
+
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/**', async (route, request) => {
+      const url = new URL(request.url());
+      const method = request.method();
+
+      if (url.pathname === '/api/digests') {
+        if (method === 'GET') {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              groupedDigests: mockGroupedDigests,
+              digests: [initialIaDigest, initialLuxDigest, initialTechDigest],
+            }),
+          });
+        }
+        return route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true }),
+        });
+      }
+
+      if (url.pathname.startsWith('/api/cron/')) {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Synthèses générées avec succès', digestsCreated: 3 }),
+        });
+      }
+
+      if (url.pathname === '/api/go-further') {
+        let postData: { text?: string } = {};
+        try {
+          postData = request.postDataJSON() || {};
+        } catch {
+          postData = {};
+        }
+        if (!postData.text || postData.text.trim().length === 0) {
+          return route.fulfill({
+            status: 400,
+            contentType: 'application/json',
+            body: JSON.stringify({ error: 'Le texte est requis pour approfondir.' }),
+          });
+        }
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            analysis: 'Analyse approfondie de l’actualité sélectionnée avec perspectives stratégiques.',
+          }),
+        });
+      }
+
+      if (url.pathname === '/api/settings') {
+        if (method === 'GET') {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(mockSettings),
+          });
+        }
+        if (method === 'PUT') {
+          try {
+            const data = request.postDataJSON() || {};
+            mockSettings = { ...mockSettings, ...data };
+          } catch {}
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(mockSettings),
+          });
+        }
+      }
+
+      if (url.pathname === '/api/sources') {
+        if (method === 'GET') {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ sources: mockSources }),
+          });
+        }
+        if (method === 'POST') {
+          let data: { name?: string; url?: string; category?: string } = {};
+          try {
+            data = request.postDataJSON() || {};
+          } catch {}
+          if (!data.name || !data.name.trim() || !data.url || !data.url.startsWith('http') || !['IA', 'Luxembourg', 'Tech'].includes(data.category || '')) {
+            return route.fulfill({
+              status: 400,
+              contentType: 'application/json',
+              body: JSON.stringify({ error: 'Données de source invalides.' }),
+            });
+          }
+          const createdSource = {
+            id: `source-${Date.now()}`,
+            name: data.name.trim(),
+            url: data.url.trim(),
+            category: data.category as 'IA' | 'Luxembourg' | 'Tech',
+            isActive: true,
+          };
+          mockSources = [...mockSources, createdSource];
+          return route.fulfill({
+            status: 201,
+            contentType: 'application/json',
+            body: JSON.stringify({ source: createdSource, id: createdSource.id }),
+          });
+        }
+        if (method === 'PATCH') {
+          let data: { id?: string; isActive?: boolean } = {};
+          try {
+            data = request.postDataJSON() || {};
+          } catch {}
+          mockSources = mockSources.map((s) =>
+            s.id === data.id ? { ...s, isActive: data.isActive ?? s.isActive } : s
+          );
+          const found = mockSources.find((s) => s.id === data.id);
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ source: found }),
+          });
+        }
+        if (method === 'DELETE') {
+          const id = url.searchParams.get('id');
+          mockSources = mockSources.filter((s) => s.id !== id);
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: true }),
+          });
+        }
+      }
+
+      return route.continue();
+    });
+  });
+
   test('Parcours 1 (AC-02, AC-03) : Tableau de bord, bascule de thème Clair/Sombre, navigation par onglets et responsive mobile', async ({
     page,
   }) => {
@@ -74,19 +272,7 @@ test.describe('Veyl — Parcours E2E Expo Web & SQLite Local', () => {
 
   test('Parcours 2 (AC-04, AC-05) : Approfondissement IA (« Aller plus loin ») et bouton de génération quotidienne', async ({
     page,
-    request,
   }) => {
-    // S'assurer qu'au moins une synthèse IA existe pour tester le bouton go-further-btn-0
-    await request.post('/api/digests', {
-      data: {
-        category: 'IA',
-        title: 'Synthèse IA du jour — Test E2E',
-        content: '## Modèles & Agents\n* **Nouvelle avancée en IA générative** : Les modèles multimodaux progressent rapidement sur le raisonnement complexe.',
-      },
-    }).catch(() => {
-      // Si POST /api/digests n'est pas exposé, le seed/cron de la base locale fournit la synthèse
-    });
-
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
 
@@ -179,7 +365,7 @@ test.describe('Veyl — Parcours E2E Expo Web & SQLite Local', () => {
 
     await lastToggleBtn.click();
 
-    // 5. Rechargement complet de la page et vérification de la persistance SQLite (AC-06)
+    // 5. Rechargement complet de la page et vérification de la persistance (AC-06)
     await page.reload();
 
     await page.getByTestId('nav-settings-btn').click();

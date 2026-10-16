@@ -4,23 +4,24 @@
   "main": "index.ts",
   "private": true,
   "scripts": {
-    "start": "expo start",
-    "web": "node scripts/setup-local-db.mjs && node scripts/dev-web.mjs",
-    "dev": "npm run web",
-    "setup:db": "node scripts/setup-local-db.mjs",
+    "web": "expo start --web --port 8081",
+    "build": "EXPO_NO_TELEMETRY=1 expo export -p web --clear",
+    "preview": "serve dist --listen 4173",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "expo lint",
     "test": "node --test tests/*.test.mjs",
-    "test:unit": "node --test tests/*.test.mjs",
     "test:e2e": "playwright test",
-    "build": "EXPO_NO_TELEMETRY=1 npx expo export -p web --clear",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:deploy": "node scripts/deploy-db.mjs",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
     "@prisma/client": "^5.22.0",
+    "@react-native-async-storage/async-storage": "^3.1.1",
     "date-fns": "^4.4.0",
     "expo": "~57.0.15",
+    "expo-constants": "^58.0.12",
     "expo-linear-gradient": "~57.0.1",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
@@ -38,6 +39,7 @@
     "eslint": "^9.39.5",
     "eslint-config-expo": "^57.0.2",
     "prisma": "^5.22.0",
+    "serve": "^14.2.6",
     "typescript": "~6.0.3"
   }
 }

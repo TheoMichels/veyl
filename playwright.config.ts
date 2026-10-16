@@ -20,9 +20,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'node scripts/setup-local-db.mjs && node scripts/local-server.mjs --port 4173 --static dist',
+    command: 'npm run preview',
     url: 'http://localhost:4173',
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
     timeout: 60000,
   },
 });

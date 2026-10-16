@@ -5,15 +5,16 @@ import path from 'node:path';
 
 const rootDir = process.cwd();
 
-test('AC-01: package.json configure la stack Expo SDK sans Next.js et expose les scripts unifiés', () => {
+test('AC-01 & AC-02: package.json configure la stack Expo SDK, les dépendances socle et les scripts cibles normés', () => {
   const pkgPath = path.join(rootDir, 'package.json');
   assert.ok(fs.existsSync(pkgPath), 'package.json doit exister');
 
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const deps = pkg.dependencies || {};
+  const devDeps = pkg.devDependencies || {};
   const scripts = pkg.scripts || {};
 
-  // Dépendances Expo obligatoires
+  // Dépendances Expo et socle obligatoires
   for (const requiredDep of [
     'expo',
     'react-native',
@@ -21,12 +22,19 @@ test('AC-01: package.json configure la stack Expo SDK sans Next.js et expose les
     'expo-linear-gradient',
     'react-native-svg',
     'zod',
+    'expo-constants',
+    '@react-native-async-storage/async-storage',
   ]) {
     assert.ok(
       deps[requiredDep],
       `La dépendance "${requiredDep}" doit être présente dans dependencies de package.json`
     );
   }
+
+  assert.ok(
+    devDeps['serve'],
+    'La dépendance "serve" doit être présente dans devDependencies de package.json'
+  );
 
   // Absence de Next.js dans dependencies
   assert.equal(
@@ -35,28 +43,88 @@ test('AC-01: package.json configure la stack Expo SDK sans Next.js et expose les
     'La dépendance "next" ne doit plus figurer dans dependencies de package.json'
   );
 
-  // Scripts obligatoires
-  for (const requiredScript of [
-    'web',
-    'dev',
-    'typecheck',
-    'lint',
-    'test',
-    'test:unit',
-    'test:e2e',
-    'build',
-  ]) {
-    assert.ok(
-      typeof scripts[requiredScript] === 'string' && scripts[requiredScript].trim().length > 0,
-      `Le script "${requiredScript}" doit être défini dans package.json`
+  // Scripts cibles normés exacts
+  const expectedScripts = {
+    web: 'expo start --web --port 8081',
+    build: 'EXPO_NO_TELEMETRY=1 expo export -p web --clear',
+    preview: 'serve dist --listen 4173',
+    typecheck: 'tsc --noEmit',
+    lint: 'expo lint',
+    test: 'node --test tests/*.test.mjs',
+    'test:e2e': 'playwright test',
+    postinstall: 'prisma generate',
+    'db:deploy': 'node scripts/deploy-db.mjs',
+    'db:studio': 'prisma studio',
+  };
+
+  for (const [scriptName, expectedCmd] of Object.entries(expectedScripts)) {
+    assert.equal(
+      scripts[scriptName],
+      expectedCmd,
+      `Le script "${scriptName}" doit valoir exactement "${expectedCmd}"`
     );
   }
+});
 
-  assert.match(
-    scripts.build,
-    /expo export.*-p web/,
-    'Le script "build" doit exporter le bundle web statique via "expo export -p web"'
+test('AC-03: app.config.js injecte dynamiquement extra.storageMode', async () => {
+  const configPath = path.join(rootDir, 'app.config.js');
+  assert.ok(fs.existsSync(configPath), 'app.config.js doit exister à la racine du projet');
+
+  const configFn = (await import(`file://${configPath}`)).default;
+  assert.equal(typeof configFn, 'function', 'app.config.js doit exporter une fonction de configuration');
+
+  // Mode local par défaut hors Vercel
+  const localConfig = configFn({ config: { extra: {} } });
+  assert.equal(localConfig.extra.storageMode, 'local');
+
+  // Mode cloud simulé Vercel production
+  const origVercel = process.env.VERCEL;
+  const origVercelEnv = process.env.VERCEL_ENV;
+  try {
+    process.env.VERCEL = '1';
+    delete process.env.VERCEL_ENV;
+    const cloudConfig = configFn({ config: { extra: {} } });
+    assert.equal(cloudConfig.extra.storageMode, 'supabase');
+  } finally {
+    if (origVercel !== undefined) process.env.VERCEL = origVercel;
+    else delete process.env.VERCEL;
+    if (origVercelEnv !== undefined) process.env.VERCEL_ENV = origVercelEnv;
+    else delete process.env.VERCEL_ENV;
+  }
+});
+
+test('AC-04: scripts/deploy-db.mjs existe et valide la présence de DIRECT_URL', async () => {
+  const deployScriptPath = path.join(rootDir, 'scripts', 'deploy-db.mjs');
+  assert.ok(fs.existsSync(deployScriptPath), 'scripts/deploy-db.mjs doit exister');
+
+  const deployMod = await import(`file://${deployScriptPath}`);
+  assert.equal(typeof deployMod.deployDatabase, 'function', 'scripts/deploy-db.mjs doit exporter deployDatabase');
+
+  assert.throws(
+    () => deployMod.deployDatabase({}),
+    /DIRECT_URL ou POSTGRES_URL_NON_POOLING est requis/,
+    'deployDatabase doit lever une erreur explicite sans DIRECT_URL'
   );
+});
+
+test('AC-05: Nettoyage SQLite — aucun résidu de scripts ou base SQLite locale', () => {
+  const obsoleteFiles = [
+    'scripts/setup-local-db.mjs',
+    'scripts/local-server.mjs',
+    'scripts/dev-web.mjs',
+    'scripts/test-db-local.mjs',
+    'prisma/schema.local.prisma',
+    'prisma/dev.db',
+  ];
+
+  for (const file of obsoleteFiles) {
+    const fullPath = path.join(rootDir, file);
+    assert.equal(
+      fs.existsSync(fullPath),
+      false,
+      `Le fichier obsolète SQLite "${file}" doit être supprimé`
+    );
+  }
 });
 
 test('AC-01: app.json configure Expo Web avec bundler Metro et langue fr', () => {
