@@ -42,9 +42,47 @@ export const createDigestSchema = z.object({
   content: z.string().trim().min(1, 'Le contenu de la synthèse est requis.'),
 });
 
+export const digestSchema = z.object({
+  id: z.string().min(1),
+  category: digestCategorySchema,
+  title: z.string().min(1),
+  content: z.string(),
+  createdAt: z.string(),
+});
+
+export const digestsListSchema = z.array(digestSchema);
+
+export const sourceSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1),
+  url: z.string().trim().url(),
+  category: digestCategorySchema,
+  isActive: z.boolean(),
+});
+
+export const sourcesListSchema = z.array(sourceSchema);
+
+export const settingsSchema = z.object({
+  id: z.string().default('default'),
+  geminiPromptIA: z.string(),
+  geminiPromptLux: z.string(),
+  geminiPromptTech: z.string(),
+  cronEnabled: z.boolean().default(true),
+});
+
+export function validate<T>(schema: z.ZodType<T>, value: unknown): T {
+  const result = schema.safeParse(value);
+  if (!result.success) {
+    const issue = result.error.issues[0];
+    throw new Error(issue ? issue.message : 'Validation des données échouée.');
+  }
+  return result.data;
+}
+
 export type CreateSourceInput = z.infer<typeof createSourceSchema>;
 export type ToggleSourceInput = z.infer<typeof toggleSourceSchema>;
 export type DeleteSourceInput = z.infer<typeof deleteSourceSchema>;
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
 export type GoFurtherInput = z.infer<typeof goFurtherSchema>;
 export type CreateDigestInput = z.infer<typeof createDigestSchema>;
+

@@ -383,4 +383,22 @@ test.describe('Veyl — Parcours E2E Expo Web statique & Mock API', () => {
     await page.getByTestId('prompt-ia-input').fill(cleanPrompt);
     await page.getByTestId('save-settings-btn').click();
   });
+
+  test('L3 E2E : Badge de mode local et présence des clés de stockage @veyl_*_v1', async ({ page }) => {
+    await page.goto('/');
+
+    // Vérification du badge Stockage local dans le Header
+    const storageBadge = page.getByTestId('storage-mode-badge');
+    await expect(storageBadge).toBeVisible();
+    await expect(storageBadge).toHaveText('Stockage local');
+
+    // Vérification que les clés de stockage AsyncStorage sont bien préfixées @veyl_*_v1
+    const storageKeys = await page.evaluate(() => Object.keys(window.localStorage));
+    const veylKeys = storageKeys.filter((k) => k.startsWith('@veyl_'));
+    expect(veylKeys.length).toBeGreaterThanOrEqual(1);
+    for (const key of veylKeys) {
+      expect(key).toMatch(/^@veyl_[a-z]+_v1$/);
+    }
+  });
 });
+

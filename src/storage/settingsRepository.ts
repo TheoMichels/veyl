@@ -1,30 +1,29 @@
-import { apiRequest } from '../services/apiClient';
-import { updateSettingsSchema, type UpdateSettingsInput } from '../utils/validation';
+import { updateSettingsSchema, settingsSchema, type UpdateSettingsInput } from '../utils/validation';
+import { readStored, writeStored } from './validatedStorage';
 import type { Settings } from '../types/veyl';
 
-interface SettingsResponse {
-  settings?: Settings;
-  id?: string;
-  geminiPromptIA?: string;
-  geminiPromptLux?: string;
-  geminiPromptTech?: string;
-  cronEnabled?: boolean;
-}
+export const SETTINGS_STORAGE_KEY = '@veyl_settings_v1';
 
-function normalizeSettings(raw: SettingsResponse): Settings {
-  const s = raw.settings || raw;
-  return {
-    id: s.id || 'default',
-    geminiPromptIA: s.geminiPromptIA || '',
-    geminiPromptLux: s.geminiPromptLux || '',
-    geminiPromptTech: s.geminiPromptTech || '',
-    cronEnabled: s.cronEnabled ?? true,
-  };
-}
+export const DEFAULT_SETTINGS: Settings = {
+  id: 'default',
+  geminiPromptIA: `Tu es un expert en veille technologique spécialisé en Intelligence Artificielle.
+Fais une synthèse globale des 3 à 5 points les plus importants à retenir avec titres clairs et puces.`,
+  geminiPromptLux: `Tu es un expert en veille stratégique et économique spécialisé sur le marché luxembourgeois (IT, finance, réglementation).
+Fais une synthèse globale des 3 à 5 faits marquants.`,
+  geminiPromptTech: `Tu es un journaliste tech. Résume les nouveautés matérielles (hardware) et logicielles (software). Structure avec des puces.`,
+  cronEnabled: true,
+};
 
 export async function getSettings(): Promise<Settings> {
-  const data = await apiRequest<SettingsResponse>('/api/settings');
-  return normalizeSettings(data);
+  try {
+    const stored = await readStored(SETTINGS_STORAGE_KEY, settingsSchema, DEFAULT_SETTINGS);
+    return stored;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Données locales')) {
+      throw error;
+    }
+    return DEFAULT_SETTINGS;
+  }
 }
 
 export async function saveSettings(input: UpdateSettingsInput): Promise<Settings> {
@@ -34,10 +33,15 @@ export async function saveSettings(input: UpdateSettingsInput): Promise<Settings
     throw new Error(firstIssue?.message || 'Les instructions Gemini sont invalides.');
   }
 
-  const data = await apiRequest<SettingsResponse>('/api/settings', {
-    method: 'PUT',
-    body: JSON.stringify(parsed.data),
-  });
+  const current = await getSettings();
+  const nextSettings: Settings = {
+    ...current,
+    geminiPromptIA: parsed.data.geminiPromptIA,
+    geminiPromptLux: parsed.data.geminiPromptLux,
+    geminiPromptTech: parsed.data.geminiPromptTech,
+    cronEnabled: parsed.data.cronEnabled ?? current.cronEnabled,
+  };
 
-  return normalizeSettings(data);
+  await writeStored(SETTINGS_STORAGE_KEY, settingsSchema, nextSettings);
+  return nextSettings;
 }

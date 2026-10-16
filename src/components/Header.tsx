@@ -3,6 +3,7 @@ import { View, Text, Pressable, useWindowDimensions, StyleSheet } from 'react-na
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { radius, spacing, type ThemeColors } from '../theme/colors';
+import { isLocalMode } from '../config/storageMode';
 import type { ThemeMode, ViewMode } from '../types/veyl';
 
 interface HeaderProps {
@@ -65,6 +66,25 @@ export default function Header({
         </Pressable>
 
         <View style={styles.actions}>
+          {isLocalMode && (
+            <View
+              style={[
+                styles.localBadge,
+                {
+                  backgroundColor: colors.surfaceMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text
+                testID="storage-mode-badge"
+                style={[styles.localBadgeText, { color: colors.textSecondary }]}
+              >
+                Stockage local
+              </Text>
+            </View>
+          )}
+
           <Pressable
             testID="theme-toggle-btn"
             onPress={onToggleTheme}
@@ -194,5 +214,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  localBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  localBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
