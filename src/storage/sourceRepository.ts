@@ -1,3 +1,5 @@
+import { supabase } from '../services/supabaseClient';
+import { getCurrentUser } from '../services/authService';
 import {
   createSourceSchema,
   toggleSourceSchema,
@@ -6,7 +8,7 @@ import {
   type CreateSourceInput,
 } from '../utils/validation';
 import { readStored, writeStored } from './validatedStorage';
-import type { Source } from '../types/veyl';
+import type { Source, DigestCategory } from '../types/veyl';
 
 export const SOURCES_STORAGE_KEY = '@veyl_sources_v1';
 
@@ -94,6 +96,28 @@ export async function getSources(): Promise<Source[]> {
   try {
     const stored = await readStored(SOURCES_STORAGE_KEY, sourcesListSchema, []);
     if (stored.length === 0) {
+      if (supabase) {
+        const user = await getCurrentUser();
+        if (user) {
+          const { data, error } = await supabase
+            .from('sources')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('name', { ascending: true });
+          if (!error && Array.isArray(data) && data.length > 0) {
+            const mapped: Source[] = data.map((s) => ({
+              id: s.id,
+              name: s.name,
+              url: s.url,
+              category: s.category as DigestCategory,
+              isActive: s.is_active,
+            }));
+            await writeStored(SOURCES_STORAGE_KEY, sourcesListSchema, mapped);
+            return mapped;
+          }
+        }
+        return [];
+      }
       await writeStored(SOURCES_STORAGE_KEY, sourcesListSchema, DEFAULT_SOURCES);
       return DEFAULT_SOURCES;
     }
@@ -102,7 +126,7 @@ export async function getSources(): Promise<Source[]> {
     if (error instanceof Error && error.message.includes('Données locales')) {
       throw error;
     }
-    return DEFAULT_SOURCES;
+    return supabase ? [] : DEFAULT_SOURCES;
   }
 }
 
@@ -125,6 +149,25 @@ export async function createSource(input: CreateSourceInput): Promise<Source> {
 
   const updated = [newSource, ...filtered];
   await writeStored(SOURCES_STORAGE_KEY, sourcesListSchema, updated);
+
+  if (supabase) {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        await supabase.from('sources').insert({
+          id: newSource.id,
+          user_id: user.id,
+          name: newSource.name,
+          url: newSource.url,
+          category: newSource.category,
+          is_active: newSource.isActive,
+        });
+      }
+    } catch {
+      // Ignorer l'erreur réseau cloud non bloquante
+    }
+  }
+
   return newSource;
 }
 
@@ -144,6 +187,22 @@ export async function toggleSourceStatus(id: string, isActive: boolean): Promise
   const updatedSource: Source = { ...target, isActive: parsed.data.isActive };
   const updatedList = current.map((s) => (s.id === parsed.data.id ? updatedSource : s));
   await writeStored(SOURCES_STORAGE_KEY, sourcesListSchema, updatedList);
+
+  if (supabase) {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        await supabase
+          .from('sources')
+          .update({ is_active: parsed.data.isActive })
+          .eq('id', parsed.data.id)
+          .eq('user_id', user.id);
+      }
+    } catch {
+      // Ignorer l'erreur réseau cloud non bloquante
+    }
+  }
+
   return updatedSource;
 }
 
@@ -157,4 +216,19 @@ export async function removeSource(id: string): Promise<void> {
   const current = await getSources();
   const updated = current.filter((s) => s.id !== parsed.data.id);
   await writeStored(SOURCES_STORAGE_KEY, sourcesListSchema, updated);
+
+  if (supabase) {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        await supabase
+          .from('sources')
+          .delete()
+          .eq('id', parsed.data.id)
+          .eq('user_id', user.id);
+      }
+    } catch {
+      // Ignorer l'erreur réseau cloud non bloquante
+    }
+  }
 }

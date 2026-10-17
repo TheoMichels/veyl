@@ -1,3 +1,5 @@
+import { supabase } from '../services/supabaseClient';
+import { getCurrentUser } from '../services/authService';
 import { updateSettingsSchema, settingsSchema, type UpdateSettingsInput } from '../utils/validation';
 import { readStored, writeStored } from './validatedStorage';
 import type { Settings } from '../types/veyl';
@@ -17,6 +19,27 @@ Fais une synthèse globale des 3 à 5 faits marquants.`,
 export async function getSettings(): Promise<Settings> {
   try {
     const stored = await readStored(SETTINGS_STORAGE_KEY, settingsSchema, DEFAULT_SETTINGS);
+    if (supabase) {
+      const user = await getCurrentUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('user_settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (!error && data) {
+          const remote: Settings = {
+            id: data.user_id,
+            geminiPromptIA: data.gemini_prompt_ia,
+            geminiPromptLux: data.gemini_prompt_lux,
+            geminiPromptTech: data.gemini_prompt_tech,
+            cronEnabled: data.cron_enabled,
+          };
+          await writeStored(SETTINGS_STORAGE_KEY, settingsSchema, remote);
+          return remote;
+        }
+      }
+    }
     return stored;
   } catch (error) {
     if (error instanceof Error && error.message.includes('Données locales')) {
@@ -43,5 +66,23 @@ export async function saveSettings(input: UpdateSettingsInput): Promise<Settings
   };
 
   await writeStored(SETTINGS_STORAGE_KEY, settingsSchema, nextSettings);
+
+  if (supabase) {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        await supabase.from('user_settings').upsert({
+          user_id: user.id,
+          gemini_prompt_ia: nextSettings.geminiPromptIA,
+          gemini_prompt_lux: nextSettings.geminiPromptLux,
+          gemini_prompt_tech: nextSettings.geminiPromptTech,
+          cron_enabled: nextSettings.cronEnabled,
+        });
+      }
+    } catch {
+      // Ignorer l'erreur réseau cloud non bloquante
+    }
+  }
+
   return nextSettings;
 }

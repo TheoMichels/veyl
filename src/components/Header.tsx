@@ -130,16 +130,18 @@ export default function Header({
                   style={[
                     styles.cloudBadge,
                     {
-                      backgroundColor: isAuthenticated ? colors.primarySoft : colors.surfaceMuted,
-                      borderColor: isAuthenticated ? colors.primaryBorder : colors.border,
+                      backgroundColor: isAuthenticated ? colors.positiveSoft : colors.surfaceMuted,
+                      borderColor: isAuthenticated ? 'rgba(21, 128, 61, 0.35)' : colors.border,
                     },
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={isAuthenticated ? 'Compte connecté' : 'Se connecter'}
                 >
                   <Text
                     testID="cloud-user-badge"
                     style={[
                       styles.cloudBadgeText,
-                      { color: isAuthenticated ? colors.primary : colors.textSecondary },
+                      { color: isAuthenticated ? colors.positive : colors.textSecondary },
                     ]}
                     numberOfLines={1}
                   >
@@ -152,13 +154,16 @@ export default function Header({
                 {isAuthenticated && (
                   <Pressable
                     testID="header-signout-btn"
-                    onPress={() => signOut()}
+                    onPress={async () => {
+                      await signOut();
+                    }}
                     style={[
                       styles.iconButton,
                       {
                         backgroundColor: colors.dangerSoft,
                       },
                     ]}
+                    accessibilityRole="button"
                     accessibilityLabel="Déconnexion"
                   >
                     <Text style={{ fontSize: 13 }}>🚪</Text>

@@ -9,7 +9,7 @@
 - Expo SDK 57 (RN Web, React 19, TS strict) · `StyleSheet` + `expo-linear-gradient` + `react-native-svg`.
 - Stockage : `src/config/storageMode.ts` (local AsyncStorage `@veyl_*_v1` / cloud Supabase schéma `veyl`).
 - Schéma : `prisma/schema.prisma` multiSchema (`veyl`, `auth`). Déploiement : `scripts/deploy-db.mjs`.
-- Auth : Supabase Auth partagée (`src/services/authService.ts`, `useAuth.ts`, `AuthModal.tsx`).
+- Auth : Supabase Auth partagée (`src/services/authService.ts`, `useAuth.ts`, `AuthScreen.tsx`, `AuthModal.tsx`).
 - Validation : `src/utils/validation.ts` (zod pour entrées externes et stockage local).
 - Serveur prod : Vercel Functions (`api/*.ts`) + crons `vercel.json`.
 

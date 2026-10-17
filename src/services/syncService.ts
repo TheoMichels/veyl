@@ -66,7 +66,8 @@ export async function pullFromCloud(userId: string): Promise<SyncResult> {
     const { data: sourcesData, error: sourcesError } = await supabase
       .from('sources')
       .select('*')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .order('name', { ascending: true });
 
     if (sourcesError) {
       throw new Error(`Erreur sources: ${sourcesError.message}`);
@@ -81,6 +82,7 @@ export async function pullFromCloud(userId: string): Promise<SyncResult> {
         category: s.category as DigestCategory,
         isActive: s.is_active,
       }));
+      localSources.sort((a, b) => a.name.localeCompare(b.name));
       await writeStored(SOURCES_STORAGE_KEY, sourcesListSchema, localSources);
     }
 
@@ -88,7 +90,8 @@ export async function pullFromCloud(userId: string): Promise<SyncResult> {
     const { data: digestsData, error: digestsError } = await supabase
       .from('digests')
       .select('*')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
     if (digestsError) {
       throw new Error(`Erreur digests: ${digestsError.message}`);
@@ -103,6 +106,8 @@ export async function pullFromCloud(userId: string): Promise<SyncResult> {
         content: d.content,
         createdAt: d.created_at,
       }));
+      // Ordonnancement chronologique strictement décroissant par date
+      localDigests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       await writeStored(DIGESTS_STORAGE_KEY, digestsListSchema, localDigests);
     }
 

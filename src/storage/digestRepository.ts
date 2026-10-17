@@ -1,12 +1,14 @@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '../services/supabaseClient';
+import { getCurrentUser } from '../services/authService';
 import {
   createDigestSchema,
   digestsListSchema,
   type CreateDigestInput,
 } from '../utils/validation';
 import { readStored, writeStored } from './validatedStorage';
-import type { DayGroup, Digest } from '../types/veyl';
+import type { DayGroup, Digest, DigestCategory } from '../types/veyl';
 
 export const DIGESTS_STORAGE_KEY = '@veyl_digests_v1';
 
@@ -91,6 +93,28 @@ export async function getDigests(): Promise<Digest[]> {
   try {
     const stored = await readStored(DIGESTS_STORAGE_KEY, digestsListSchema, []);
     if (stored.length === 0) {
+      if (supabase) {
+        const user = await getCurrentUser();
+        if (user) {
+          const { data, error } = await supabase
+            .from('digests')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+          if (!error && Array.isArray(data) && data.length > 0) {
+            const mapped: Digest[] = data.map((d) => ({
+              id: d.id,
+              category: d.category as DigestCategory,
+              title: d.title,
+              content: d.content,
+              createdAt: d.created_at,
+            }));
+            await writeStored(DIGESTS_STORAGE_KEY, digestsListSchema, mapped);
+            return mapped;
+          }
+        }
+        return [];
+      }
       await writeStored(DIGESTS_STORAGE_KEY, digestsListSchema, DEFAULT_DIGESTS);
       return DEFAULT_DIGESTS;
     }
@@ -99,7 +123,7 @@ export async function getDigests(): Promise<Digest[]> {
     if (error instanceof Error && error.message.includes('Données locales')) {
       throw error;
     }
-    return DEFAULT_DIGESTS;
+    return supabase ? [] : DEFAULT_DIGESTS;
   }
 }
 
@@ -126,6 +150,25 @@ export async function addDigest(input: CreateDigestInput): Promise<Digest> {
 
   const updated = [newDigest, ...current];
   await writeStored(DIGESTS_STORAGE_KEY, digestsListSchema, updated);
+
+  if (supabase) {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        await supabase.from('digests').insert({
+          id: newDigest.id,
+          user_id: user.id,
+          category: newDigest.category,
+          title: newDigest.title,
+          content: newDigest.content,
+          created_at: newDigest.createdAt,
+        });
+      }
+    } catch {
+      // Ignorer l'erreur réseau cloud non bloquante
+    }
+  }
+
   return newDigest;
 }
 
@@ -158,4 +201,24 @@ export async function triggerDailyDigestsGeneration(): Promise<void> {
   ];
 
   await writeStored(DIGESTS_STORAGE_KEY, digestsListSchema, [...generated, ...current]);
+
+  if (supabase) {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        await supabase.from('digests').insert(
+          generated.map((d) => ({
+            id: d.id,
+            user_id: user.id,
+            category: d.category,
+            title: d.title,
+            content: d.content,
+            created_at: d.createdAt,
+          }))
+        );
+      }
+    } catch {
+      // Ignorer l'erreur réseau cloud non bloquante
+    }
+  }
 }
