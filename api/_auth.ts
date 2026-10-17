@@ -1,6 +1,6 @@
 import type { IncomingMessage } from 'node:http';
 
-export const DEFAULT_USER_ID = process.env.OWNER_USER_ID || '00000000-0000-0000-0000-000000000001';
+export const DEFAULT_USER_ID = process.env.OWNER_USER_ID || '15278318-e637-4962-b832-a4827b87c64a';
 
 export function getRequestUserId(req: IncomingMessage): string {
   const authHeader = req.headers['authorization'];

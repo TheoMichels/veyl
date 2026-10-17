@@ -9,7 +9,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
-    const parsed = goFurtherSchema.safeParse(req.body);
+    const rawBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const parsed = goFurtherSchema.safeParse(rawBody);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.issues[0]?.message || 'Texte manquant.' });
       return;

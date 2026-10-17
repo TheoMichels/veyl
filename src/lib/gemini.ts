@@ -38,9 +38,10 @@ export async function analyzeGlobalFeed(
   const ai = new GoogleGenAI({ apiKey });
   const fullPrompt = `${prompt}\n\nVoici les articles bruts :\n${articlesText.substring(0, 100000)}`;
   const modelsToTry = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-3.8-flash',
+    'gemini-3.7-flash',
+    'gemini-3.5-flash',
+    'gemini-flash-latest',
   ];
 
   const maxRetries = 2;
@@ -95,9 +96,10 @@ Développe cette actualité en apportant du contexte supplémentaire, des détai
 Important : Assure-toi de bien relier ton explication aux acteurs et technologies spécifiques mentionnés dans le texte original (par exemple en les citant), afin de ne pas produire une réponse trop générique ou théorique. Formatte ta réponse en Markdown.`;
 
   const modelsToTry = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-3.8-flash',
+    'gemini-3.7-flash',
+    'gemini-3.5-flash',
+    'gemini-flash-latest',
   ];
 
   const maxRetries = 2;
