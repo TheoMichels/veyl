@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, useWindowDimensions, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { LinearGradient } from 'expo-linear-gradient';
 import Header from './src/components/Header';
 import DigestDashboard from './src/components/DigestDashboard';
 import SettingsView from './src/components/SettingsView';
@@ -9,10 +8,11 @@ import {
   getGroupedDigests,
   triggerDailyDigestsGeneration,
 } from './src/storage/digestRepository';
-import { getThemeColors, getThemeGradient, spacing } from './src/theme/colors';
+import { getThemeColors } from './src/theme/colors';
 import type { DayGroup, ThemeMode, ViewMode } from './src/types/veyl';
 
 export default function App() {
+  const { width } = useWindowDimensions();
   const [themeMode, setThemeMode] = useState<ThemeMode>('light');
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
 
@@ -22,7 +22,7 @@ export default function App() {
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   const colors = getThemeColors(themeMode);
-  const gradientColors = getThemeGradient(themeMode);
+  const horizontalPadding = width < 640 ? 16 : width < 1024 ? 24 : 32;
 
   useEffect(() => {
     let active = true;
@@ -90,44 +90,45 @@ export default function App() {
   };
 
   return (
-    <LinearGradient colors={gradientColors} style={styles.gradientRoot}>
+    <View style={[styles.appShell, { backgroundColor: colors.background }]}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
-      <View style={styles.appShell}>
-        <Header
-          themeMode={themeMode}
-          onToggleTheme={toggleTheme}
-          viewMode={viewMode}
-          onNavigate={setViewMode}
-          colors={colors}
-        />
+      <Header
+        themeMode={themeMode}
+        onToggleTheme={toggleTheme}
+        viewMode={viewMode}
+        onNavigate={setViewMode}
+        colors={colors}
+      />
 
-        <ScrollView
-          style={styles.scrollArea}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {viewMode === 'dashboard' ? (
-            <DigestDashboard
-              groupedDigests={groupedDigests}
-              isLoading={isLoadingDigests}
-              isGenerating={isGenerating}
-              error={dashboardError}
-              onGenerate={handleGenerateDigests}
-              onRetry={loadDigests}
-              colors={colors}
-            />
-          ) : (
-            <SettingsView colors={colors} />
-          )}
-        </ScrollView>
-      </View>
-    </LinearGradient>
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: horizontalPadding,
+            paddingVertical: 32, // py-8
+          },
+        ]}
+      >
+        {viewMode === 'dashboard' ? (
+          <DigestDashboard
+            groupedDigests={groupedDigests}
+            isLoading={isLoadingDigests}
+            isGenerating={isGenerating}
+            error={dashboardError}
+            onGenerate={handleGenerateDigests}
+            onRetry={loadDigests}
+            colors={colors}
+          />
+        ) : (
+          <SettingsView colors={colors} />
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  gradientRoot: {
-    flex: 1,
-  },
   appShell: {
     flex: 1,
   },
@@ -135,8 +136,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
     flexGrow: 1,
   },
 });

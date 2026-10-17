@@ -12,7 +12,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Svg, { Path, Rect } from 'react-native-svg';
 import ExpandableNewsSection from './ExpandableNewsSection';
-import { radius, spacing, shadows, type ThemeColors } from '../theme/colors';
+import { spacing, shadows, type ThemeColors } from '../theme/colors';
 import type { DayGroup, Digest, TabId } from '../types/veyl';
 
 interface DigestDashboardProps {
@@ -293,22 +293,26 @@ export default function DigestDashboard({
             <Pressable
               testID="sidebar-toggle-btn"
               onPress={() => setIsSidebarOpen(!isSidebarOpen)}
-              style={[
-                styles.sidebarToggleBtn,
-                {
-                  backgroundColor: colors.surfaceMuted,
-                  borderColor: colors.border,
-                },
-              ]}
+              style={styles.sidebarToggleBtn}
               accessibilityRole="button"
               accessibilityLabel={
                 isSidebarOpen ? 'Masquer le panneau latéral' : 'Afficher le panneau latéral'
               }
             >
-              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                <Rect x="3" y="3" width="18" height="18" rx="2" stroke={colors.textSecondary} strokeWidth="2" />
-                <Path d="M9 3v18" stroke={colors.textSecondary} strokeWidth="2" />
-              </Svg>
+              {isSidebarOpen ? (
+                /* Lucide PanelLeftClose */
+                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                  <Rect x="3" y="3" width="18" height="18" rx="2" stroke={colors.textSecondary} strokeWidth="2" />
+                  <Path d="M9 3v18" stroke={colors.textSecondary} strokeWidth="2" />
+                  <Path d="m16 15-3-3 3-3" stroke={colors.textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+              ) : (
+                /* Lucide PanelLeft */
+                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                  <Rect x="3" y="3" width="18" height="18" rx="2" stroke={colors.textSecondary} strokeWidth="2" />
+                  <Path d="M9 3v18" stroke={colors.textSecondary} strokeWidth="2" />
+                </Svg>
+              )}
             </Pressable>
           )}
 
@@ -318,7 +322,7 @@ export default function DigestDashboard({
               styles.tabsContainer,
               {
                 backgroundColor: colors.surfaceMuted,
-                borderColor: colors.border,
+                alignSelf: isMobile ? 'stretch' : 'flex-start',
               },
             ]}
           >
@@ -338,7 +342,7 @@ export default function DigestDashboard({
               <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
                 <Path
                   d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
-                  stroke={activeTab === 'ia' ? colors.brand : colors.textMuted}
+                  stroke={activeTab === 'ia' ? colors.brand : colors.textSecondary}
                   strokeWidth="2"
                   strokeLinejoin="round"
                 />
@@ -348,7 +352,7 @@ export default function DigestDashboard({
                   styles.tabBtnText,
                   {
                     color: activeTab === 'ia' ? colors.brand : colors.textSecondary,
-                    fontWeight: activeTab === 'ia' ? '600' : '500',
+                    fontWeight: '500',
                   },
                 ]}
               >
@@ -374,8 +378,8 @@ export default function DigestDashboard({
                 style={[
                   styles.tabBtnText,
                   {
-                    color: activeTab === 'lux' ? '#2563EB' : colors.textSecondary,
-                    fontWeight: activeTab === 'lux' ? '600' : '500',
+                    color: activeTab === 'lux' ? (colors.mode === 'dark' ? '#60A5FA' : '#2563EB') : colors.textSecondary,
+                    fontWeight: '500',
                   },
                 ]}
               >
@@ -397,16 +401,16 @@ export default function DigestDashboard({
               accessibilityRole="tab"
             >
               <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                <Rect x="4" y="4" width="16" height="16" rx="2" stroke={activeTab === 'tech' ? '#059669' : colors.textMuted} strokeWidth="2" />
-                <Rect x="9" y="9" width="6" height="6" stroke={activeTab === 'tech' ? '#059669' : colors.textMuted} strokeWidth="2" />
-                <Path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" stroke={activeTab === 'tech' ? '#059669' : colors.textMuted} strokeWidth="2" strokeLinecap="round" />
+                <Rect x="4" y="4" width="16" height="16" rx="2" stroke={activeTab === 'tech' ? (colors.mode === 'dark' ? '#4ADE80' : '#16A34A') : colors.textSecondary} strokeWidth="2" />
+                <Rect x="9" y="9" width="6" height="6" rx="1" stroke={activeTab === 'tech' ? (colors.mode === 'dark' ? '#4ADE80' : '#16A34A') : colors.textSecondary} strokeWidth="2" />
+                <Path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" stroke={activeTab === 'tech' ? (colors.mode === 'dark' ? '#4ADE80' : '#16A34A') : colors.textSecondary} strokeWidth="2" strokeLinecap="round" />
               </Svg>
               <Text
                 style={[
                   styles.tabBtnText,
                   {
-                    color: activeTab === 'tech' ? '#059669' : colors.textSecondary,
-                    fontWeight: activeTab === 'tech' ? '600' : '500',
+                    color: activeTab === 'tech' ? (colors.mode === 'dark' ? '#4ADE80' : '#16A34A') : colors.textSecondary,
+                    fontWeight: '500',
                   },
                 ]}
               >
@@ -453,17 +457,12 @@ export default function DigestDashboard({
             shadows.card,
           ]}
         >
-          {/* Header coloré selon catégorie */}
+          {/* Header neutre conforme à prod bg-neutral-50 dark:bg-neutral-900/50 */}
           <View
             style={[
               styles.digestCardHeader,
               {
-                backgroundColor:
-                  activeTab === 'ia'
-                    ? colors.categoryIASoft
-                    : activeTab === 'lux'
-                    ? colors.categoryLuxSoft
-                    : colors.categoryTechSoft,
+                backgroundColor: colors.cardHeaderBg,
                 borderBottomColor: colors.border,
               },
             ]}
@@ -473,8 +472,15 @@ export default function DigestDashboard({
                 <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
                   <Path
                     d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
-                    stroke={colors.brand}
+                    stroke={colors.mode === 'dark' ? '#818CF8' : '#6366F1'}
                     strokeWidth="2"
+                    strokeLinejoin="round"
+                  />
+                  <Path
+                    d="M20 3v4M22 5h-4M4 17v2M5 18H3"
+                    stroke={colors.mode === 'dark' ? '#818CF8' : '#6366F1'}
+                    strokeWidth="2"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                 </Svg>
@@ -482,9 +488,9 @@ export default function DigestDashboard({
                 <Text style={styles.cardHeaderFlag}>🇱🇺</Text>
               ) : (
                 <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                  <Rect x="4" y="4" width="16" height="16" rx="2" stroke="#059669" strokeWidth="2" />
-                  <Rect x="9" y="9" width="6" height="6" stroke="#059669" strokeWidth="2" />
-                  <Path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
+                  <Rect x="4" y="4" width="16" height="16" rx="2" stroke={colors.mode === 'dark' ? '#4ADE80' : '#22C55E'} strokeWidth="2" />
+                  <Rect x="9" y="9" width="6" height="6" rx="1" stroke={colors.mode === 'dark' ? '#4ADE80' : '#22C55E'} strokeWidth="2" />
+                  <Path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" stroke={colors.mode === 'dark' ? '#4ADE80' : '#22C55E'} strokeWidth="2" strokeLinecap="round" />
                 </Svg>
               )}
 
@@ -520,6 +526,7 @@ export default function DigestDashboard({
               </View>
             ) : (
               <View style={styles.digestContentWrapper}>
+                <h3 style={{ display: 'none' }}>{currentDigest.title}</h3>
                 <Text style={[styles.digestTitle, { color: colors.textPrimary }]}>
                   {currentDigest.title}
                 </Text>
@@ -548,9 +555,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     width: '100%',
-    maxWidth: 1360,
-    alignSelf: 'center',
-    gap: spacing.xl,
+    gap: 32,
   },
   rootDesktop: {
     flexDirection: 'row',
@@ -566,18 +571,18 @@ const styles = StyleSheet.create({
     width: 256,
     flexShrink: 0,
     borderRightWidth: 1,
-    paddingRight: spacing.xl,
+    paddingRight: 24,
   },
   sidebarMobile: {
     width: '100%',
     borderBottomWidth: 1,
   },
   sidebarHeader: {
-    marginBottom: spacing.lg,
+    marginBottom: 24,
   },
   sidebarTitle: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.5,
   },
   sidebarSubtitle: {
@@ -589,20 +594,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: 10,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.sm, // 12
-    marginBottom: spacing.xl,
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 24,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   generateBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   mobileHistoryBlock: {
     gap: spacing.sm,
@@ -611,10 +616,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: radius.sm,
-    borderWidth: 1,
+    borderRadius: 8,
+    borderWidth: 0,
   },
   mobileAccordionLeft: {
     flexDirection: 'row',
@@ -639,7 +644,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.xs,
+    marginBottom: 12,
   },
   historyTitle: {
     fontSize: 14,
@@ -650,7 +655,7 @@ const styles = StyleSheet.create({
   },
   historyItemBtn: {
     width: '100%',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     marginBottom: 4,
@@ -666,19 +671,19 @@ const styles = StyleSheet.create({
   mainArea: {
     flex: 1,
     minWidth: 0,
-    gap: spacing.lg,
+    gap: 24,
   },
   topControlsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 16,
     width: '100%',
   },
   sidebarToggleBtn: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -688,21 +693,20 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 4,
     padding: 4,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    flex: 1,
+    borderRadius: 8,
+    borderWidth: 0,
   },
   tabBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   tabBtnActive: {
-    borderRadius: 8,
+    borderRadius: 6,
   },
   tabBtnText: {
     fontSize: 14,
@@ -716,7 +720,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.md,
-    borderRadius: radius.sm,
+    borderRadius: 8,
     borderWidth: 1,
   },
   errorBannerText: {
@@ -735,21 +739,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   digestCard: {
-    borderRadius: radius.md, // 16
+    borderRadius: 12, // rounded-xl
     borderWidth: 1,
     overflow: 'hidden',
     flex: 1,
     minHeight: 400,
   },
   digestCardHeader: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderBottomWidth: 1,
   },
   cardHeaderTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 8,
   },
   cardHeaderFlag: {
     fontSize: 20,
@@ -760,7 +764,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   digestCardBody: {
-    padding: spacing.xl,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
     flex: 1,
   },
   loadingBox: {
@@ -780,15 +785,16 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   digestContentWrapper: {
-    gap: spacing.md,
+    gap: 0,
   },
   digestTitle: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '600',
     letterSpacing: -0.5,
+    marginBottom: 8,
   },
   digestTimestamp: {
     fontSize: 14,
-    marginBottom: spacing.md,
+    marginBottom: 32, // mb-8
   },
 });

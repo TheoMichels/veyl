@@ -242,7 +242,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                 style={[
                   styles.textAreaMonospace,
                   {
-                    backgroundColor: colors.surfaceMuted,
+                    backgroundColor: colors.mode === 'dark' ? '#0A0A0A' : '#FAFAFA',
                     borderColor: colors.border,
                     color: colors.textPrimary,
                   },
@@ -265,7 +265,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                 style={[
                   styles.textAreaMonospace,
                   {
-                    backgroundColor: colors.surfaceMuted,
+                    backgroundColor: colors.mode === 'dark' ? '#0A0A0A' : '#FAFAFA',
                     borderColor: colors.border,
                     color: colors.textPrimary,
                   },
@@ -288,7 +288,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                 style={[
                   styles.textAreaMonospace,
                   {
-                    backgroundColor: colors.surfaceMuted,
+                    backgroundColor: colors.mode === 'dark' ? '#0A0A0A' : '#FAFAFA',
                     borderColor: colors.border,
                     color: colors.textPrimary,
                   },
@@ -349,7 +349,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                       styles.sourceCard,
                       isMobile ? styles.sourceCardMobile : styles.sourceCardDesktop,
                       {
-                        backgroundColor: colors.surfaceMuted,
+                        backgroundColor: colors.mode === 'dark' ? '#0A0A0A' : '#FAFAFA',
                         borderColor: colors.border,
                       },
                     ]}
@@ -363,14 +363,14 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                           style={[
                             styles.categoryBadge,
                             {
-                              backgroundColor: colors.border,
+                              backgroundColor: colors.mode === 'dark' ? '#262626' : '#E5E5E5',
                             },
                           ]}
                         >
                           <Text
                             style={[
                               styles.categoryBadgeText,
-                              { color: colors.textSecondary },
+                              { color: colors.mode === 'dark' ? '#A3A3A3' : '#525252' },
                             ]}
                           >
                             {source.category}
@@ -398,7 +398,9 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                               ? colors.mode === 'dark'
                                 ? 'rgba(74, 222, 128, 0.15)'
                                 : '#DCFCE7'
-                              : colors.border,
+                              : colors.mode === 'dark'
+                              ? '#262626'
+                              : '#E5E5E5',
                           },
                         ]}
                         accessibilityRole="button"
@@ -427,7 +429,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                         style={styles.deleteBtn}
                         accessibilityRole="button"
                       >
-                        <Text style={[styles.deleteBtnText, { color: colors.danger }]}>
+                        <Text style={[styles.deleteBtnText, { color: colors.mode === 'dark' ? '#F87171' : '#EF4444' }]}>
                           Supprimer
                         </Text>
                       </Pressable>
@@ -463,7 +465,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                   style={[
                     styles.formInput,
                     {
-                      backgroundColor: colors.surfaceMuted,
+                      backgroundColor: colors.mode === 'dark' ? '#0A0A0A' : '#FAFAFA',
                       borderColor: colors.border,
                       color: colors.textPrimary,
                     },
@@ -480,7 +482,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                   style={[
                     styles.formInput,
                     {
-                      backgroundColor: colors.surfaceMuted,
+                      backgroundColor: colors.mode === 'dark' ? '#0A0A0A' : '#FAFAFA',
                       borderColor: colors.border,
                       color: colors.textPrimary,
                     },
@@ -493,7 +495,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                   style={[
                     styles.categorySelect,
                     {
-                      backgroundColor: colors.surfaceMuted,
+                      backgroundColor: colors.mode === 'dark' ? '#0A0A0A' : '#FAFAFA',
                       borderColor: colors.border,
                     },
                   ]}
@@ -513,7 +515,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                   style={[
                     styles.actionDarkBtn,
                     {
-                      backgroundColor: colors.mode === 'dark' ? '#E5E7EB' : '#1F2937',
+                      backgroundColor: colors.mode === 'dark' ? '#E5E5E5' : '#262626',
                       opacity: isAddingSource ? 0.6 : 1,
                     },
                   ]}
@@ -522,7 +524,7 @@ export default function SettingsView({ colors }: SettingsViewProps) {
                   <Text
                     style={[
                       styles.actionDarkBtnText,
-                      { color: colors.mode === 'dark' ? '#111827' : '#FFFFFF' },
+                      { color: colors.mode === 'dark' ? '#171717' : '#FFFFFF' },
                     ]}
                   >
                     {isAddingSource ? 'Ajout...' : 'Ajouter'}
@@ -542,23 +544,23 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 896, // max-w-4xl (56rem = 896px)
     alignSelf: 'center',
-    gap: spacing.xl,
+    gap: 40, // space-y-10
   },
   headerBlock: {
-    marginBottom: spacing.md,
+    marginBottom: 8,
   },
   pageTitle: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 30,
+    fontWeight: '700',
     letterSpacing: -0.5,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   pageSubtitle: {
-    fontSize: 15,
+    fontSize: 16,
   },
   banner: {
     padding: spacing.md,
-    borderRadius: radius.sm,
+    borderRadius: 8,
     borderWidth: 1,
   },
   bannerText: {
@@ -574,32 +576,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   sectionsWrapper: {
-    gap: spacing.xl,
+    gap: 40,
   },
   card: {
-    padding: spacing.xl,
-    borderRadius: radius.md, // 16
+    padding: 24,
+    borderRadius: 12, // rounded-xl
     borderWidth: 1,
-    gap: spacing.lg,
+    gap: 24,
   },
   cardTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '600',
     letterSpacing: -0.3,
   },
   fieldGroup: {
-    gap: 6,
+    gap: 8,
   },
   fieldLabel: {
     fontSize: 14,
     fontWeight: '500',
   },
   textAreaMonospace: {
-    minHeight: 120,
-    padding: spacing.md,
+    height: 128, // h-32
+    padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: Platform.select({
       ios: 'Menlo',
       android: 'monospace',
@@ -609,22 +611,23 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     alignSelf: 'flex-start',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 8,
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   saveBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   sourcesList: {
-    gap: spacing.sm,
+    gap: 16,
+    marginBottom: 32,
   },
   emptySourcesText: {
     fontSize: 14,
@@ -632,7 +635,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   sourceCard: {
-    padding: spacing.lg,
+    padding: 16,
     borderRadius: 8,
     borderWidth: 1,
     gap: spacing.md,
@@ -657,7 +660,7 @@ const styles = StyleSheet.create({
   },
   sourceName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   categoryBadge: {
     paddingHorizontal: 8,
@@ -669,8 +672,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   sourceUrlText: {
-    fontSize: 13,
-    marginTop: 2,
+    fontSize: 14,
+    marginTop: 4,
   },
   sourceButtonsRow: {
     flexDirection: 'row',
@@ -681,28 +684,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
+    borderWidth: 0,
   },
   toggleBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   deleteBtn: {
     paddingHorizontal: 8,
     paddingVertical: 6,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
   },
   deleteBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   addSourceSection: {
     borderTopWidth: 1,
-    paddingTop: spacing.lg,
-    marginTop: spacing.xs,
-    gap: spacing.md,
+    paddingTop: 24,
+    marginTop: 8,
+    gap: 16,
   },
   addSourceHeading: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   addSourceFields: {
     gap: spacing.sm,
@@ -717,16 +723,16 @@ const styles = StyleSheet.create({
   formInput: {
     flex: 1,
     minHeight: 40,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
     fontSize: 14,
   },
   categorySelect: {
     minHeight: 40,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
     alignItems: 'center',
@@ -738,19 +744,19 @@ const styles = StyleSheet.create({
   },
   actionDarkBtn: {
     minHeight: 40,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   actionDarkBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });

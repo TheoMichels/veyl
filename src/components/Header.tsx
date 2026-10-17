@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, Pressable, useWindowDimensions, StyleSheet, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { radius, spacing, type ThemeColors } from '../theme/colors';
@@ -24,9 +24,21 @@ export default function Header({
   colors,
 }: HeaderProps) {
   const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  const horizontalPadding = width < 640 ? 16 : width < 1024 ? 24 : 32;
   const { user, isAuthenticated, signOut } = useAuth();
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
+
+  const brandGradientStyle =
+    Platform.OS === 'web'
+      ? ({
+          backgroundImage:
+            themeMode === 'dark'
+              ? 'linear-gradient(to right, #818CF8, #C084FC)'
+              : 'linear-gradient(to right, #4F46E5, #9333EA)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        } as any)
+      : { color: themeMode === 'dark' ? '#818CF8' : '#4F46E5' };
 
   return (
     <>
@@ -39,7 +51,7 @@ export default function Header({
           },
         ]}
       >
-        <View style={[styles.inner, isMobile ? styles.innerMobile : styles.innerDesktop]}>
+        <View style={[styles.inner, { paddingHorizontal: horizontalPadding }]}>
           <Pressable
             testID="nav-home-btn"
             onPress={() => onNavigate('dashboard')}
@@ -53,19 +65,41 @@ export default function Header({
               end={{ x: 1, y: 1 }}
               style={styles.logoBadge}
             >
-              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                <Circle cx="12" cy="12" r="9" stroke="#FFFFFF" strokeWidth="2" strokeOpacity="0.45" />
-                <Circle cx="12" cy="12" r="5" stroke="#FFFFFF" strokeWidth="2" strokeOpacity="0.75" />
-                <Circle cx="12" cy="12" r="2" fill="#FFFFFF" />
-                <Path d="M12 12L18.5 5.5" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" />
+              {/* Lucide Radar */}
+              <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M19.07 4.93A10 10 0 0 0 6.99 3.34"
+                  stroke="#FFFFFF"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <Path
+                  d="M4 6h.01"
+                  stroke="#FFFFFF"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <Path
+                  d="M2.29 9.62A10 10 0 1 0 21.31 8.35"
+                  stroke="#FFFFFF"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <Path
+                  d="M16.24 7.76A6 6 0 1 0 8.23 16.64"
+                  stroke="#FFFFFF"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <Path
+                  d="M12 12l4.5-4.5"
+                  stroke="#FFFFFF"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
               </Svg>
             </LinearGradient>
-            <Text
-              style={[
-                styles.brandTitle,
-                { color: themeMode === 'dark' ? '#818CF8' : '#4F46E5' },
-              ]}
-            >
+            <Text style={[styles.brandTitle, brandGradientStyle]}>
               Veyl
             </Text>
           </Pressable>
@@ -123,7 +157,6 @@ export default function Header({
                       styles.iconButton,
                       {
                         backgroundColor: colors.dangerSoft,
-                        borderColor: colors.danger,
                       },
                     ]}
                     accessibilityLabel="Déconnexion"
@@ -134,35 +167,32 @@ export default function Header({
               </View>
             )}
 
+            {/* Lucide Sun / Moon Toggle */}
             <Pressable
               testID="theme-toggle-btn"
               onPress={onToggleTheme}
-              style={[
-                styles.iconButton,
-                {
-                  backgroundColor: colors.surfaceMuted,
-                  borderColor: colors.border,
-                },
-              ]}
+              style={styles.iconButton}
               accessibilityRole="button"
               accessibilityLabel={
                 themeMode === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'
               }
             >
               {themeMode === 'dark' ? (
-                <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                  <Circle cx="12" cy="12" r="4" stroke={colors.warning} strokeWidth="2" />
+                /* Lucide Sun */
+                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                  <Circle cx="12" cy="12" r="4" stroke={colors.textSecondary} strokeWidth="2" />
                   <Path
                     d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
-                    stroke={colors.warning}
+                    stroke={colors.textSecondary}
                     strokeWidth="2"
                     strokeLinecap="round"
                   />
                 </Svg>
               ) : (
-                <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                /* Lucide Moon */
+                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
                   <Path
-                    d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                    d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"
                     stroke={colors.textSecondary}
                     strokeWidth="2"
                     strokeLinecap="round"
@@ -172,33 +202,31 @@ export default function Header({
               )}
             </Pressable>
 
+            {/* Lucide Settings Button */}
             <Pressable
               testID="nav-settings-btn"
               onPress={() => onNavigate(viewMode === 'settings' ? 'dashboard' : 'settings')}
               style={[
                 styles.iconButton,
-                {
-                  backgroundColor:
-                    viewMode === 'settings' ? colors.primarySoft : colors.surfaceMuted,
-                  borderColor:
-                    viewMode === 'settings' ? colors.primaryBorder : colors.border,
-                },
+                viewMode === 'settings' && { backgroundColor: colors.surfaceMuted },
               ]}
               accessibilityRole="button"
               accessibilityLabel="Paramètres"
             >
-              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+              <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+                  stroke={viewMode === 'settings' ? colors.brand : colors.textSecondary}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
                 <Circle
                   cx="12"
                   cy="12"
                   r="3"
-                  stroke={viewMode === 'settings' ? colors.primary : colors.textSecondary}
+                  stroke={viewMode === 'settings' ? colors.brand : colors.textSecondary}
                   strokeWidth="2"
-                />
-                <Path
-                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-                  stroke={viewMode === 'settings' ? colors.primary : colors.textSecondary}
-                  strokeWidth="1.8"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -284,21 +312,21 @@ const styles = StyleSheet.create({
   iconButton: {
     width: 36,
     height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 6,
+    borderWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
   localBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    borderRadius: radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   localBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });
