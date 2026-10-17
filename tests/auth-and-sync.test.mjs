@@ -32,14 +32,36 @@ test('L5: supabaseClient reste null en mode local même avec clés factices', ()
   assert.equal(mod.supabase, null, 'Le client Supabase doit être null en mode local');
 });
 
-test('L5: authService renvoie des erreurs françaises pour les codes Supabase connus', async () => {
-  let signInError = null;
+test('L5 & AC-05: authService renvoie des erreurs françaises pour les codes Supabase connus', async () => {
   const mockSupabase = {
     auth: {
-      signInWithPassword: async () => ({
-        data: { user: null, session: null },
-        error: { code: 'invalid_credentials', message: 'Invalid login credentials' },
-      }),
+      signInWithPassword: async ({ password }) => {
+        if (password === 'badpassword') {
+          return {
+            data: { user: null, session: null },
+            error: { code: 'invalid_credentials', message: 'Invalid login credentials' },
+          };
+        }
+        if (password === 'weakpass') {
+          return {
+            data: { user: null, session: null },
+            error: { code: 'weak_password', message: 'Password is weak' },
+          };
+        }
+        if (password === 'ratelimited_req') {
+          return {
+            data: { user: null, session: null },
+            error: { code: 'over_request_rate_limit', message: 'Too many requests' },
+          };
+        }
+        if (password === 'ratelimited_mail') {
+          return {
+            data: { user: null, session: null },
+            error: { code: 'over_email_send_rate_limit', message: 'Rate limit on emails' },
+          };
+        }
+        return { data: { user: null, session: null }, error: null };
+      },
       signUp: async () => ({
         data: { user: null, session: null },
         error: { code: 'user_already_exists', message: 'User already registered' },
@@ -65,6 +87,158 @@ test('L5: authService renvoie des erreurs françaises pour les codes Supabase co
   const resSignUp = await authMod.signUp('user@test.com', 'password123');
   assert.equal(resSignUp.user, null);
   assert.equal(resSignUp.error?.message, 'Un compte existe déjà avec cette adresse e-mail.');
+
+  const resWeak = await authMod.signIn('user@test.com', 'weakpass');
+  assert.equal(resWeak.error?.message, 'Choisissez un mot de passe plus robuste.');
+
+  const resRateLimitReq = await authMod.signIn('user@test.com', 'ratelimited_req');
+  assert.equal(resRateLimitReq.error?.message, 'Trop de tentatives. Patientez quelques instants puis réessayez.');
+
+  const resRateLimitMail = await authMod.signIn('user@test.com', 'ratelimited_mail');
+  assert.equal(resRateLimitMail.error?.message, 'Trop de tentatives. Patientez quelques instants puis réessayez.');
+});
+
+test('AC-03: clearLocalCache supprime toutes les clés commençant par @veyl_ dans AsyncStorage et localStorage', async () => {
+  const asyncStorageState = {
+    '@veyl_digests_v1': '[{"id":"1"}]',
+    '@veyl_sources_v1': '[{"id":"2"}]',
+    '@veyl_settings_v1': '{"id":"3"}',
+    'other_app_token': 'keep-me',
+  };
+
+  const removedAsyncKeys = [];
+  const mockAsyncStorage = {
+    getAllKeys: async () => Object.keys(asyncStorageState),
+    removeMany: async (keys) => {
+      removedAsyncKeys.push(...keys);
+      for (const k of keys) {
+        delete asyncStorageState[k];
+      }
+    },
+    multiRemove: async (keys) => {
+      removedAsyncKeys.push(...keys);
+      for (const k of keys) {
+        delete asyncStorageState[k];
+      }
+    },
+  };
+
+  const localStorageMap = new Map([
+    ['@veyl_digests_v1', 'digest-data'],
+    ['@veyl_auth_token', 'auth-data'],
+    ['other_unrelated_key', 'unrelated-data'],
+  ]);
+
+  const mockLocalStorage = {
+    get length() {
+      return localStorageMap.size;
+    },
+    key: (i) => Array.from(localStorageMap.keys())[i] ?? null,
+    removeItem: (key) => {
+      localStorageMap.delete(key);
+    },
+  };
+
+  const syncMod = loadTypeScript(
+    'src/services/syncService.ts',
+    {
+      './supabaseClient': { supabase: null },
+      'react-native': { Platform: { OS: 'web' } },
+      'expo-constants': { expoConfig: { extra: { storageMode: 'local' } } },
+      '@react-native-async-storage/async-storage': mockAsyncStorage,
+    },
+    {
+      window: { localStorage: mockLocalStorage },
+    }
+  );
+
+  await syncMod.clearLocalCache();
+
+  // Vérification AsyncStorage
+  assert.equal(asyncStorageState['@veyl_digests_v1'], undefined);
+  assert.equal(asyncStorageState['@veyl_sources_v1'], undefined);
+  assert.equal(asyncStorageState['@veyl_settings_v1'], undefined);
+  assert.equal(asyncStorageState['other_app_token'], 'keep-me');
+  assert.deepEqual(removedAsyncKeys.sort(), ['@veyl_digests_v1', '@veyl_settings_v1', '@veyl_sources_v1']);
+
+  // Vérification localStorage
+  assert.equal(localStorageMap.has('@veyl_digests_v1'), false);
+  assert.equal(localStorageMap.has('@veyl_auth_token'), false);
+  assert.equal(localStorageMap.has('other_unrelated_key'), true);
+});
+
+test('AC-01 & AC-03: useAuth ne modifie pas isLoading lors de signIn, signUp ou signOut et purge le cache', async () => {
+  let authCallback = null;
+  let clearLocalCacheCount = 0;
+
+  const mockAuthService = {
+    getSession: async () => ({ user: { id: 'user-init' } }),
+    onAuthStateChange: (cb) => {
+      authCallback = cb;
+      return { unsubscribe: () => {} };
+    },
+    signIn: async () => ({
+      user: { id: 'user-signin' },
+      session: { user: { id: 'user-signin' } },
+      error: null,
+    }),
+    signUp: async () => ({
+      user: { id: 'user-signup' },
+      session: { user: { id: 'user-signup' } },
+      error: null,
+    }),
+    signOut: async () => ({ error: null }),
+  };
+
+  const mockSyncService = {
+    clearLocalCache: async () => {
+      clearLocalCacheCount++;
+    },
+  };
+
+  const useAuthMod = loadTypeScript(
+    'src/hooks/useAuth.ts',
+    {
+      '../config/storageMode': { isLocalMode: false },
+      '../services/authService': mockAuthService,
+      '../services/syncService': mockSyncService,
+      react: {
+        useCallback: (fn) => fn,
+        useEffect: () => {},
+        useSyncExternalStore: (subscribe, getSnapshot) => getSnapshot(),
+      },
+    }
+  );
+
+  // Attendre l'initAuth
+  await new Promise((resolve) => setTimeout(resolve, 25));
+
+  const auth = useAuthMod.useAuth();
+  assert.equal(auth.isLoading, false, 'isLoading doit être résolu à false après l init');
+
+  // Test signIn : isLoading reste false
+  const signInRes = await auth.signIn('test@veyl.com', 'password123');
+  assert.equal(signInRes.success, true);
+  const authAfterSignIn = useAuthMod.useAuth();
+  assert.equal(authAfterSignIn.isLoading, false, 'isLoading ne doit pas être altéré par signIn');
+
+  // Test signUp : isLoading reste false
+  const signUpRes = await auth.signUp('test2@veyl.com', 'password123');
+  assert.equal(signUpRes.success, true);
+  const authAfterSignUp = useAuthMod.useAuth();
+  assert.equal(authAfterSignUp.isLoading, false, 'isLoading ne doit pas être altéré par signUp');
+
+  // Test signOut : clearLocalCache est appelé, isLoading reste false
+  await auth.signOut();
+  assert.equal(clearLocalCacheCount, 1, 'signOut doit appeler clearLocalCache()');
+  const authAfterSignOut = useAuthMod.useAuth();
+  assert.equal(authAfterSignOut.isLoading, false, 'isLoading ne doit pas être repassé à true lors de signOut');
+
+  // Test SIGNED_OUT externe : clearLocalCache est appelé
+  if (authCallback) {
+    authCallback(null, null, 'SIGNED_OUT');
+    assert.equal(clearLocalCacheCount, 2, 'L événement SIGNED_OUT doit appeler clearLocalCache()');
+  }
 });
 
 test('L5: syncService gère les synchronisations en toute sécurité', async () => {
@@ -78,6 +252,8 @@ test('L5: syncService gère les synchronisations en toute sécurité', async () 
         getItem: async () => null,
         setItem: async () => {},
         removeItem: async () => {},
+        getAllKeys: async () => [],
+        multiRemove: async () => {},
       },
     }
   );
@@ -85,27 +261,35 @@ test('L5: syncService gère les synchronisations en toute sécurité', async () 
   assert.ok(syncMod.pullFromCloud, 'pullFromCloud doit être exporté');
   assert.ok(syncMod.pushToCloud, 'pushToCloud doit être exporté');
   assert.ok(syncMod.syncAll, 'syncAll doit être exporté');
+  assert.ok(syncMod.clearLocalCache, 'clearLocalCache doit être exporté');
 
   const pullRes = await syncMod.pullFromCloud('test-user-id');
   assert.equal(pullRes.success, false);
   assert.match(pullRes.error, /Client Supabase/);
 });
 
-test('AC-02 & AC-03: App.tsx implémente la garde d authentification et l écran de chargement', () => {
+test('AC-04: App.tsx implémente la garde d authentification stack-target.md §5 et isole MainApp', () => {
   const appPath = path.join(rootDir, 'App.tsx');
   assert.ok(fs.existsSync(appPath), 'App.tsx doit exister');
   const appContent = fs.readFileSync(appPath, 'utf8');
 
-  assert.match(appContent, /auth-loading-screen/, 'App.tsx doit contenir le testID auth-loading-screen pour AC-03');
+  assert.match(appContent, /auth-loading-screen/, 'App.tsx doit contenir le testID auth-loading-screen');
   assert.match(appContent, /auth-loading-spinner/, 'App.tsx doit contenir le spinner de chargement de session');
-  assert.match(appContent, /<AuthScreen\s*\/>/, 'App.tsx doit rendre AuthScreen pour AC-02');
+  assert.match(appContent, /<AuthScreen\s*\/>/, 'App.tsx doit rendre AuthScreen');
   assert.match(appContent, /pullFromCloud/, 'App.tsx doit appeler pullFromCloud pour synchroniser les données utilisateur');
+  assert.match(appContent, /isPulling/, 'App.tsx doit gérer le statut isPulling');
+  assert.match(appContent, /pulledFor/, 'App.tsx doit mémoriser pulledFor.current');
+  assert.match(appContent, /<MainApp\s+key=\{user\?\.id\s*\?\?\s*['"]local['"]\}/, 'App.tsx doit isoler le dashboard dans MainApp avec key={user?.id ?? "local"}');
+  assert.match(appContent, /isLoading\s*\|\|\s*isPulling/, 'App.tsx doit afficher LoadingScreen si isLoading || isPulling');
 });
 
-test('AC-04: AuthScreen.tsx est structuré avec tabs, validation et branding Veyl', () => {
+test('AC-05: AuthScreen.tsx est structuré avec tabs, validation, banner non configuré et aucun as any', () => {
   const authScreenPath = path.join(rootDir, 'src', 'components', 'AuthScreen.tsx');
   assert.ok(fs.existsSync(authScreenPath), 'src/components/AuthScreen.tsx doit exister');
   const content = fs.readFileSync(authScreenPath, 'utf8');
+
+  // Aucun "as any"
+  assert.doesNotMatch(content, /as\s+any/, 'AuthScreen.tsx ne doit contenir aucun "as any"');
 
   // TestIDs obligatoires
   assert.match(content, /testID="auth-screen"/);
@@ -116,6 +300,7 @@ test('AC-04: AuthScreen.tsx est structuré avec tabs, validation et branding Vey
   assert.match(content, /testID="auth-submit-btn"/);
   assert.match(content, /testID="auth-error-banner"/);
   assert.match(content, /testID="auth-success-banner"/);
+  assert.match(content, /testID="auth-unconfigured-banner"/, 'AuthScreen.tsx doit contenir testID="auth-unconfigured-banner"');
 
   // Couleurs et branding Veyl
   assert.match(content, /#4F46E5/);
@@ -133,6 +318,10 @@ test('AC-05: pullFromCloud ordonne les digests par date décroissante et les sou
     },
     removeItem: async (key) => {
       delete writtenStorage[key];
+    },
+    getAllKeys: async () => Object.keys(writtenStorage),
+    multiRemove: async (keys) => {
+      for (const k of keys) delete writtenStorage[k];
     },
   };
 

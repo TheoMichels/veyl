@@ -16,10 +16,16 @@ function authError(error: unknown, fallback: string): Error {
   if (code === 'user_already_exists' || message.includes('already registered')) {
     return new Error('Un compte existe déjà avec cette adresse e-mail.');
   }
-  if (code === 'weak_password') {
-    return new Error('Choisissez un mot de passe plus robuste (au moins 6 caractères).');
+  if (code === 'weak_password' || message.includes('weak password')) {
+    return new Error('Choisissez un mot de passe plus robuste.');
   }
-  if (code === 'over_request_rate_limit' || code === 'over_email_send_rate_limit' || message.includes('rate limit')) {
+  if (
+    (code.startsWith('over_') && code.includes('rate_limit')) ||
+    code === 'over_request_rate_limit' ||
+    code === 'over_email_send_rate_limit' ||
+    code.includes('rate_limit') ||
+    message.includes('rate limit')
+  ) {
     return new Error('Trop de tentatives. Patientez quelques instants puis réessayez.');
   }
   if (message.includes('fetch') || message.includes('network')) {

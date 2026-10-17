@@ -10,6 +10,8 @@ import {
   TextInput,
   View,
   useWindowDimensions,
+  type StyleProp,
+  type TextStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
@@ -96,13 +98,13 @@ export function AuthScreen(): React.JSX.Element {
 
   const isBusy = isSubmitting || isAuthLoading;
 
-  const brandGradientStyle =
+  const brandGradientStyle: StyleProp<TextStyle> =
     Platform.OS === 'web'
       ? ({
           backgroundImage: 'linear-gradient(to right, #4F46E5, #9333EA)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-        } as any)
+        } as unknown as TextStyle)
       : { color: '#4F46E5' };
 
   return (
@@ -176,7 +178,7 @@ export function AuthScreen(): React.JSX.Element {
 
             {/* Alerte si Supabase non configuré */}
             {!isSupabaseConfigured && (
-              <View style={styles.unconfiguredBox}>
+              <View style={styles.unconfiguredBox} testID="auth-unconfigured-banner">
                 <View style={styles.unconfiguredHeader}>
                   <Text style={styles.unconfiguredIcon}>⚠️</Text>
                   <Text style={styles.unconfiguredTitle}>Configuration Supabase requise</Text>

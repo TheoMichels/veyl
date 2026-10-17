@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { z } from 'zod';
 import { supabase } from './supabaseClient';
 import { readStored, writeStored } from '../storage/validatedStorage';
@@ -20,6 +21,54 @@ import {
   validate,
 } from '../utils/validation';
 import type { Source, Digest, Settings, DigestCategory } from '../types/veyl';
+
+/**
+ * Supprime toutes les clés de données préfixées @veyl_ d'AsyncStorage et de window.localStorage.
+ * Garantit qu'aucune donnée du compte précédent ne subsiste en local après déconnexion.
+ */
+export async function clearLocalCache(): Promise<void> {
+  // 1. Purge AsyncStorage (React Native et stockage miroir web)
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const veylKeys = allKeys.filter((key) => key.startsWith('@veyl_'));
+    if (veylKeys.length > 0) {
+      if (typeof AsyncStorage.removeMany === 'function') {
+        await AsyncStorage.removeMany(veylKeys);
+      } else if (
+        'multiRemove' in AsyncStorage &&
+        typeof (AsyncStorage as { multiRemove?: (k: string[]) => Promise<void> }).multiRemove ===
+          'function'
+      ) {
+        await (AsyncStorage as { multiRemove: (k: string[]) => Promise<void> }).multiRemove(
+          veylKeys
+        );
+      } else {
+        await Promise.all(veylKeys.map((k) => AsyncStorage.removeItem(k)));
+      }
+    }
+  } catch {
+    // Tolérance aux erreurs de suppression de stockage
+  }
+
+  // 2. Purge directe window.localStorage (web/PWA synchrone)
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const toRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const key = window.localStorage.key(i);
+        if (key && key.startsWith('@veyl_')) {
+          toRemove.push(key);
+        }
+      }
+      for (const k of toRemove) {
+        window.localStorage.removeItem(k);
+      }
+    } catch {
+      // Tolérance aux erreurs localStorage (quota, mode navigation privée)
+    }
+  }
+}
+
 
 export interface SyncResult {
   success: boolean;
