@@ -2,33 +2,63 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["veyl", "auth"]
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
-// Les éditions globales de veille (Briefing)
+// -----------------------------------------------------------------------------
+// 1. Digests (Synthèses de veille quotidiennes)
+// -----------------------------------------------------------------------------
 model Digest {
-  id          String   @id @default(cuid())
-  category    String   // 'IA' ou 'Luxembourg'
-  title       String   // ex: "Veille IA du 22 Septembre"
-  content     String   // Contenu markdown/HTML de la synthèse (généré par l'IA)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id") @db.Uuid
+  category  String   // 'IA' | 'Luxembourg' | 'Tech'
+  title     String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([userId], map: "idx_digests_user_id")
+  @@index([userId, category], map: "idx_digests_category")
+  @@map("digests")
+  @@schema("veyl")
 }
 
+// -----------------------------------------------------------------------------
+// 2. Sources (Flux RSS surveillés)
+// -----------------------------------------------------------------------------
 model Source {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id") @db.Uuid
   name      String
-  url       String    @unique
-  category  String    // 'IA' ou 'Luxembourg'
-  isActive  Boolean   @default(true)
+  url       String
+  category  String   // 'IA' | 'Luxembourg' | 'Tech'
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([userId, url], map: "uq_sources_user_url")
+  @@index([userId], map: "idx_sources_user_id")
+  @@map("sources")
+  @@schema("veyl")
 }
 
+// -----------------------------------------------------------------------------
+// 3. Settings (Réglages de veille et prompts Gemini par utilisateur)
+// -----------------------------------------------------------------------------
 model Settings {
-  id              String   @id @default("default")
-  geminiPromptIA  String
-  geminiPromptLux String
-  geminiPromptTech String  @default("Tu es un journaliste tech. Résume les nouveautés matérielles (hardware) et logicielles (software). Structure avec des puces et ajoute les liens sources.")
-  cronEnabled     Boolean  @default(true)
+  userId          String   @id @map("user_id") @db.Uuid
+  geminiPromptIA  String   @map("gemini_prompt_ia")
+  geminiPromptLux String   @map("gemini_prompt_lux")
+  geminiPromptTech String  @default("Tu es un journaliste tech. Résume les nouveautés matérielles (hardware) et logicielles (software). Structure avec des puces et ajoute les liens sources.") @map("gemini_prompt_tech")
+  cronEnabled     Boolean  @default(true) @map("cron_enabled")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("user_settings")
+  @@schema("veyl")
 }

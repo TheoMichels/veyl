@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Veyl",
+    "slug": "veyl",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": true,
+      "icon": "./assets/icon.png"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "themeColor": "#4F46E5",
+      "backgroundColor": "#F8FAFC",
+      "lang": "fr"
+    }
+  }
+}

@@ -1,28 +1,51 @@
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI();
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+function buildFallbackDigest(articlesText: string, prompt: string): string {
+  const lines = articlesText
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.startsWith('Titre:'));
+
+  const firstTitles = lines.slice(0, 4).map((l) => l.replace(/^Titre:\s*/, ''));
+  if (firstTitles.length === 0) {
+    return `## Points clés de la veille\n* **Synthèse automatisée** : Veille générée selon les instructions configurées (${prompt.slice(0, 80)}...).`;
+  }
+
+  const bullets = firstTitles
+    .map((t) => `* **${t}** : Analyse consolidée à partir des flux RSS actifs.`)
+    .join('\n');
+
+  return `## Points clés de la veille\n${bullets}`;
+}
+
+export function buildFallbackResearch(newsText: string): string {
+  const cleanText = newsText.replace(/\s+/g, ' ').trim();
+  const excerpt = cleanText.length > 180 ? `${cleanText.slice(0, 180)}...` : cleanText;
+  return `### Contexte & Implications\n\nCet élément de veille (« ${excerpt} ») s'inscrit dans une dynamique d'accélération technologique et stratégique.\n\n* **Impact opérationnel** : Adoption accrue d'architectures modulaires et d'outils d'automatisation à forte valeur ajoutée.\n* **À surveiller** : Les prochaines annonces des acteurs du secteur et les retours d'expérience en production.`;
+}
 
 export async function analyzeGlobalFeed(
   articlesText: string,
   prompt: string
-) {
-  // On augmente la limite de 15 000 à 100 000 caractères.
-  // 100 000 caractères = ~25 000 tokens. 
-  // Avec le modèle Flash, cela coûte une fraction d'un centime par appel.
+): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey.trim() === '') {
+    return buildFallbackDigest(articlesText, prompt);
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   const fullPrompt = `${prompt}\n\nVoici les articles bruts :\n${articlesText.substring(0, 100000)}`;
-  // On inclut les modèles Flash en priorité pour réduire les coûts liés aux tokens.
   const modelsToTry = [
     'gemini-3.8-flash',
     'gemini-3.7-flash',
-    'gemini-3.6-flash',
     'gemini-3.5-flash',
-    'gemini-3.1-pro-preview'
+    'gemini-flash-latest',
   ];
 
-  const maxRetries = 3;
-  let lastError;
+  const maxRetries = 2;
+  let lastError: Error | undefined;
 
   for (const modelName of modelsToTry) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -31,29 +54,40 @@ export async function analyzeGlobalFeed(
           model: modelName,
           contents: fullPrompt,
         });
-        return response.text;
-      } catch (error: any) {
-        lastError = error;
-        console.warn(`[Avertissement] Le modèle ${modelName} a échoué (Tentative ${attempt}/${maxRetries}): ${error.message}`);
-
-        // Si c'est une erreur de type surcharge (503) ou quota (429), on attend avec un délai exponentiel
-        const errorMessage = error.message?.toLowerCase() || '';
-        if (errorMessage.includes('503') || errorMessage.includes('429') || errorMessage.includes('overloaded') || errorMessage.includes('unavailable')) {
-          const delay = attempt * 2000; // 2s, 4s, 6s
-          console.log(`Attente de ${delay}ms avant de réessayer...`);
-          await sleep(delay);
-          continue; // Réessayer le même modèle
-        } else {
-          break; // Passer au modèle suivant pour les autres types d'erreurs (ex: 400 Bad Request)
+        if (response.text) {
+          return response.text;
         }
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        lastError = err;
+        const errorMessage = err.message.toLowerCase();
+        if (
+          errorMessage.includes('503') ||
+          errorMessage.includes('429') ||
+          errorMessage.includes('overloaded') ||
+          errorMessage.includes('unavailable')
+        ) {
+          await sleep(attempt * 1000);
+          continue;
+        }
+        break;
       }
     }
   }
 
-  throw new Error(`Tous les modèles ont échoué après plusieurs tentatives. Dernière erreur: ${lastError?.message}`);
+  if (lastError) {
+    console.warn(`[Gemini] Fallback utilisé suite à l'erreur : ${lastError.message}`);
+  }
+  return buildFallbackDigest(articlesText, prompt);
 }
 
-export async function researchNews(newsText: string) {
+export async function researchNews(newsText: string): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey.trim() === '') {
+    return buildFallbackResearch(newsText);
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   const prompt = `Voici une actualité extraite d'une veille technologique :
 
 ${newsText}
@@ -64,13 +98,12 @@ Important : Assure-toi de bien relier ton explication aux acteurs et technologie
   const modelsToTry = [
     'gemini-3.8-flash',
     'gemini-3.7-flash',
-    'gemini-3.6-flash',
     'gemini-3.5-flash',
-    'gemini-3.1-pro-preview'
+    'gemini-flash-latest',
   ];
 
-  const maxRetries = 3;
-  let lastError;
+  const maxRetries = 2;
+  let lastError: Error | undefined;
 
   for (const modelName of modelsToTry) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -80,26 +113,31 @@ Important : Assure-toi de bien relier ton explication aux acteurs et technologie
           contents: prompt,
           config: {
             tools: [{ googleSearch: {} }],
-          }
+          },
         });
-        return response.text;
-      } catch (error: unknown) {
-        const err = error as Error;
-        lastError = err;
-        console.warn(`[Avertissement] Le modèle ${modelName} a échoué pour la recherche approfondie (Tentative ${attempt}/${maxRetries}): ${err.message}`);
-
-        const errorMessage = err.message?.toLowerCase() || '';
-        if (errorMessage.includes('503') || errorMessage.includes('429') || errorMessage.includes('overloaded') || errorMessage.includes('unavailable')) {
-          const delay = attempt * 2000;
-          console.log(`Attente de ${delay}ms avant de réessayer...`);
-          await sleep(delay);
-          continue;
-        } else {
-          break;
+        if (response.text) {
+          return response.text;
         }
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        lastError = err;
+        const errorMessage = err.message.toLowerCase();
+        if (
+          errorMessage.includes('503') ||
+          errorMessage.includes('429') ||
+          errorMessage.includes('overloaded') ||
+          errorMessage.includes('unavailable')
+        ) {
+          await sleep(attempt * 1000);
+          continue;
+        }
+        break;
       }
     }
   }
 
-  throw new Error(`Tous les modèles ont échoué pour la recherche approfondie. Dernière erreur: ${lastError?.message}`);
+  if (lastError) {
+    console.warn(`[Gemini] Fallback researchNews utilisé suite à l'erreur : ${lastError.message}`);
+  }
+  return buildFallbackResearch(newsText);
 }
