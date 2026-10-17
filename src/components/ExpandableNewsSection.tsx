@@ -6,14 +6,48 @@ import {
   ActivityIndicator,
   Linking,
   StyleSheet,
+  Platform,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { fetchGoFurther } from '../services/aiService';
 import { spacing, type ThemeColors } from '../theme/colors';
 
 interface ExpandableNewsSectionProps {
   content: string;
   colors: ThemeColors;
+}
+
+function LucideSparkles({
+  size = 14,
+  color,
+  isFilled = false,
+  fillColor,
+}: {
+  size?: number;
+  color: string;
+  isFilled?: boolean;
+  fillColor?: string;
+}) {
+  return (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <Path
+        d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
+        fill={isFilled ? (fillColor || (color === '#6366F1' ? '#EEF2FF' : 'rgba(49, 46, 129, 0.5)')) : 'none'}
+      />
+      <Path d="M20 2v4" />
+      <Path d="M22 4h-4" />
+      <Circle cx={4} cy={20} r={2} fill={isFilled ? (fillColor || color) : 'none'} />
+    </Svg>
+  );
 }
 
 interface ParsedBulletItem {
@@ -229,14 +263,12 @@ export default function ExpandableNewsSection({
       >
         <View style={[styles.expandedHeader, { borderBottomColor: headerBorder }]}>
           <View style={styles.expandedBadgeRow}>
-            <Svg width={14} height={14} viewBox="0 0 24 24" fill={colors.mode === 'dark' ? 'rgba(30, 27, 75, 0.5)' : '#EEF2FF'}>
-              <Path
-                d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
-                stroke={cardBorderLeft}
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-            </Svg>
+            <LucideSparkles
+              size={14}
+              color={cardBorderLeft}
+              isFilled={true}
+              fillColor={colors.mode === 'dark' ? 'rgba(49, 46, 129, 0.5)' : '#EEF2FF'}
+            />
             <Text style={[styles.expandedBadgeText, { color: colors.mode === 'dark' ? '#A5B4FC' : '#4338CA' }]}>
               Approfondissement IA
             </Text>
@@ -327,14 +359,12 @@ export default function ExpandableNewsSection({
                   accessibilityRole="button"
                   accessibilityLabel="Aller plus loin"
                 >
-                  <Svg width={14} height={14} viewBox="0 0 24 24" fill={activeIndex === section.sectionActionIndex ? (colors.mode === 'dark' ? 'rgba(30, 27, 75, 0.5)' : '#EEF2FF') : 'none'}>
-                    <Path
-                      d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
-                      stroke={activeIndex === section.sectionActionIndex ? colors.brand : colors.textMuted}
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-                  </Svg>
+                  <LucideSparkles
+                    size={16}
+                    color={activeIndex === section.sectionActionIndex ? colors.brand : colors.textMuted}
+                    isFilled={activeIndex === section.sectionActionIndex}
+                    fillColor={colors.mode === 'dark' ? 'rgba(49, 46, 129, 0.5)' : '#EEF2FF'}
+                  />
                 </Pressable>
               )}
             </View>
@@ -374,14 +404,12 @@ export default function ExpandableNewsSection({
                           accessibilityRole="button"
                           accessibilityLabel="Aller plus loin"
                         >
-                          <Svg width={14} height={14} viewBox="0 0 24 24" fill={activeIndex === bullet.actionIndex ? (colors.mode === 'dark' ? 'rgba(30, 27, 75, 0.5)' : '#EEF2FF') : 'none'}>
-                            <Path
-                              d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
-                              stroke={activeIndex === bullet.actionIndex ? colors.brand : colors.textMuted}
-                              strokeWidth="2"
-                              strokeLinejoin="round"
-                            />
-                          </Svg>
+                          <LucideSparkles
+                            size={14}
+                            color={activeIndex === bullet.actionIndex ? colors.brand : colors.textMuted}
+                            isFilled={activeIndex === bullet.actionIndex}
+                            fillColor={colors.mode === 'dark' ? 'rgba(49, 46, 129, 0.5)' : '#EEF2FF'}
+                          />
                         </Pressable>
                       )}
                     </Text>
@@ -442,15 +470,22 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   inlineSparkleBtn: {
-    display: 'inline-flex' as any,
+    ...(Platform.OS === 'web'
+      ? ({
+          display: 'inline-flex',
+          verticalAlign: 'middle',
+          marginLeft: 6,
+          transform: [{ translateY: -1 }],
+        } as any)
+      : {
+          marginLeft: 6,
+        }),
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    marginLeft: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 5,
     borderRadius: 6,
     borderWidth: 0,
-    verticalAlign: 'middle',
   },
   sparkleBtn: {
     alignItems: 'center',

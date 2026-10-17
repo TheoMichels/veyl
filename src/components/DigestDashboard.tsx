@@ -7,10 +7,11 @@ import {
   ActivityIndicator,
   useWindowDimensions,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import ExpandableNewsSection from './ExpandableNewsSection';
 import { spacing, shadows, type ThemeColors } from '../theme/colors';
 import type { DayGroup, Digest, TabId } from '../types/veyl';
@@ -23,6 +24,26 @@ interface DigestDashboardProps {
   onGenerate: () => Promise<void>;
   onRetry: () => Promise<void>;
   colors: ThemeColors;
+}
+
+function LucideSparkles({ size = 16, color }: { size?: number; color: string }) {
+  return (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <Path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" />
+      <Path d="M20 2v4" />
+      <Path d="M22 4h-4" />
+      <Circle cx={4} cy={20} r={2} />
+    </Svg>
+  );
 }
 
 export default function DigestDashboard({
@@ -322,6 +343,7 @@ export default function DigestDashboard({
               styles.tabsContainer,
               {
                 backgroundColor: colors.surfaceMuted,
+                width: isMobile ? '100%' : 'auto',
                 alignSelf: isMobile ? 'stretch' : 'flex-start',
               },
             ]}
@@ -331,6 +353,9 @@ export default function DigestDashboard({
               onPress={() => handleTabChange('ia')}
               style={[
                 styles.tabBtn,
+                isMobile && (Platform.OS === 'web'
+                  ? ({ flex: 1, minWidth: 0, flexBasis: 'calc(50% - 4px)' } as any)
+                  : { flex: 1, minWidth: 0, flexBasis: '48%' }),
                 activeTab === 'ia' && [
                   styles.tabBtnActive,
                   { backgroundColor: colors.surfaceActive },
@@ -339,20 +364,19 @@ export default function DigestDashboard({
               ]}
               accessibilityRole="tab"
             >
-              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
-                  stroke={activeTab === 'ia' ? colors.brand : colors.textSecondary}
-                  strokeWidth="2"
-                  strokeLinejoin="round"
-                />
-              </Svg>
+              <LucideSparkles
+                size={isMobile ? 14 : 16}
+                color={activeTab === 'ia' ? colors.brand : colors.textSecondary}
+              />
               <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
                 style={[
                   styles.tabBtnText,
                   {
                     color: activeTab === 'ia' ? colors.brand : colors.textSecondary,
                     fontWeight: '500',
+                    fontSize: isMobile ? 12 : 14,
                   },
                 ]}
               >
@@ -365,6 +389,9 @@ export default function DigestDashboard({
               onPress={() => handleTabChange('lux')}
               style={[
                 styles.tabBtn,
+                isMobile && (Platform.OS === 'web'
+                  ? ({ flex: 1, minWidth: 0, flexBasis: 'calc(50% - 4px)' } as any)
+                  : { flex: 1, minWidth: 0, flexBasis: '48%' }),
                 activeTab === 'lux' && [
                   styles.tabBtnActive,
                   { backgroundColor: colors.surfaceActive },
@@ -375,11 +402,14 @@ export default function DigestDashboard({
             >
               <Text style={styles.flagIcon}>🇱🇺</Text>
               <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
                 style={[
                   styles.tabBtnText,
                   {
                     color: activeTab === 'lux' ? (colors.mode === 'dark' ? '#60A5FA' : '#2563EB') : colors.textSecondary,
                     fontWeight: '500',
+                    fontSize: isMobile ? 12 : 14,
                   },
                 ]}
               >
@@ -392,6 +422,9 @@ export default function DigestDashboard({
               onPress={() => handleTabChange('tech')}
               style={[
                 styles.tabBtn,
+                isMobile && (Platform.OS === 'web'
+                  ? ({ flex: 1, minWidth: 0, flexBasis: 'calc(50% - 4px)' } as any)
+                  : { flex: 1, minWidth: 0, flexBasis: '48%' }),
                 activeTab === 'tech' && [
                   styles.tabBtnActive,
                   { backgroundColor: colors.surfaceActive },
@@ -400,17 +433,20 @@ export default function DigestDashboard({
               ]}
               accessibilityRole="tab"
             >
-              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Svg width={isMobile ? 14 : 16} height={isMobile ? 14 : 16} viewBox="0 0 24 24" fill="none">
                 <Rect x="4" y="4" width="16" height="16" rx="2" stroke={activeTab === 'tech' ? (colors.mode === 'dark' ? '#4ADE80' : '#16A34A') : colors.textSecondary} strokeWidth="2" />
                 <Rect x="9" y="9" width="6" height="6" rx="1" stroke={activeTab === 'tech' ? (colors.mode === 'dark' ? '#4ADE80' : '#16A34A') : colors.textSecondary} strokeWidth="2" />
                 <Path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" stroke={activeTab === 'tech' ? (colors.mode === 'dark' ? '#4ADE80' : '#16A34A') : colors.textSecondary} strokeWidth="2" strokeLinecap="round" />
               </Svg>
               <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
                 style={[
                   styles.tabBtnText,
                   {
                     color: activeTab === 'tech' ? (colors.mode === 'dark' ? '#4ADE80' : '#16A34A') : colors.textSecondary,
                     fontWeight: '500',
+                    fontSize: isMobile ? 12 : 14,
                   },
                 ]}
               >
@@ -469,21 +505,10 @@ export default function DigestDashboard({
           >
             <View style={styles.cardHeaderTitleRow}>
               {activeTab === 'ia' ? (
-                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
-                    stroke={colors.mode === 'dark' ? '#818CF8' : '#6366F1'}
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                  <Path
-                    d="M20 3v4M22 5h-4M4 17v2M5 18H3"
-                    stroke={colors.mode === 'dark' ? '#818CF8' : '#6366F1'}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
+                <LucideSparkles
+                  size={20}
+                  color={colors.mode === 'dark' ? '#818CF8' : '#6366F1'}
+                />
               ) : activeTab === 'lux' ? (
                 <Text style={styles.cardHeaderFlag}>🇱🇺</Text>
               ) : (
