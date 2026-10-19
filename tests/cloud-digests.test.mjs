@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { loadTypeScript } from './helpers/load-typescript.mjs';
+import { createClient } from '@supabase/supabase-js';
 
 const row = { id: 'real-1', category: 'IA', title: 'Veille', content: 'RSS', created_at: '2026-10-19T03:00:00Z' };
 function repository({ cloud = true, rows = [row], error = null, token = 'session-token', requestError = null, response = { message: 'Success', digestsCreated: 1 } } = {}) {
@@ -57,6 +58,15 @@ test('AC02: absent session and generation failure propagate without synthetic ca
     await assert.rejects(state.repo.triggerDailyDigestsGeneration());
     assert.equal(state.cache()[0].id, 'dig_gen_old');
   }
+});
+
+test('AC02: no session invites sign-in and never calls the protected generation API', async () => {
+  const state = repository({ token: null });
+  await assert.rejects(
+    state.repo.triggerDailyDigestsGeneration(),
+    /Connectez-vous depuis le bouton « Connexion »/
+  );
+  assert.equal(state.calls.filter(call => typeof call === 'object').length, 0);
 });
 
 test('AC03: cloud reads fresh data, clears empty cache, rejects database failures', async () => {
@@ -124,6 +134,42 @@ test('AC02 auth: missing/invalid token rejected; verified session and cron secre
   assert.equal(await getCronUserId({ headers: { authorization: 'Bearer forged' } }), null);
   assert.equal(await getCronUserId({ headers: { authorization: 'Bearer cron-secret' } }), 'owner');
   assert.equal(await getCronUserId({ headers: { authorization: 'Bearer verified' } }), 'verified-owner');
+});
+
+test('AC01 auth: production JWT verification uses the same Supabase project as the client', async () => {
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(String(input));
+    requests.push({ host: url.host, authorization: new Headers(init.headers).get('Authorization'), apikey: new Headers(init.headers).get('apikey') });
+    if (url.host !== 'client-project.supabase.co') {
+      return Response.json({ message: 'Invalid JWT' }, { status: 401 });
+    }
+    return Response.json({ id: 'verified-owner', aud: 'authenticated' });
+  };
+  try {
+    const env = {
+      SUPABASE_URL: 'https://server-project.supabase.co',
+      SUPABASE_ANON_KEY: 'server-project-key',
+      EXPO_PUBLIC_SUPABASE_URL: 'https://client-project.supabase.co',
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: 'client-project-key',
+    };
+    const { getCronUserId } = loadTypeScript('api/_cronAuth.ts', {
+      './_auth': { DEFAULT_USER_ID: 'owner' },
+      '@supabase/supabase-js': { createClient },
+    }, { process: { env } });
+    assert.equal(
+      await getCronUserId({ headers: { authorization: 'Bearer signed-in-session-token' } }),
+      'verified-owner'
+    );
+    assert.deepEqual(requests, [{
+      host: 'client-project.supabase.co',
+      authorization: 'Bearer signed-in-session-token',
+      apikey: 'client-project-key',
+    }]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('AC02 auth: cron handler returns 401 without accessing Prisma for unauthorized request', async () => {

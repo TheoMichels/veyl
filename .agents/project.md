@@ -35,4 +35,4 @@
 
 ## Zones sensibles et déploiement
 - Déploiement Vercel (fonctions + crons). Données en schéma `veyl` sur Supabase partagé. Clé Gemini serveur uniquement.
-- Cron : `CRON_SECRET` requis pour le planificateur ; `OWNER_USER_ID` facultatif (UUID de repli dans `api/_auth.ts`). Appels manuels : jeton vérifié Supabase.
+- Cron : `CRON_SECRET` requis ; `OWNER_USER_ID` facultatif (repli dans `api/_auth.ts`). Auth manuelle : couple complet `EXPO_PUBLIC_SUPABASE_*` prioritaire, sinon `SUPABASE_*` ; même projet que `DATABASE_URL`.

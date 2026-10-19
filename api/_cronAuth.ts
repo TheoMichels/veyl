@@ -15,8 +15,13 @@ export async function getCronUserId(req: IncomingMessage): Promise<string | null
     const expected = Buffer.from(secret);
     if (provided.length === expected.length && timingSafeEqual(provided, expected)) return DEFAULT_USER_ID;
   }
-  const url = process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  const clientUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const clientKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  const serverUrl = process.env.SUPABASE_URL;
+  const serverKey = process.env.SUPABASE_ANON_KEY;
+  const [url, key] = clientUrl && clientKey
+    ? [clientUrl, clientKey]
+    : [serverUrl, serverKey];
   if (!url || !key) return null;
   try {
     const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });

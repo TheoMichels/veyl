@@ -178,8 +178,12 @@ export async function triggerDailyDigestsGeneration(): Promise<void> {
   if (supabase) {
     try {
       const { data, error } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (error || !token) throw new Error('Connectez-vous pour générer vos synthèses.');
+      const session = data.session;
+      if (error || !session) {
+        throw new Error('Connectez-vous depuis le bouton « Connexion » pour générer vos synthèses.');
+      }
+      const token = session.access_token;
+      if (!token) throw new Error('Connectez-vous depuis le bouton « Connexion » pour générer vos synthèses.');
       const results = await Promise.allSettled(['ia', 'luxembourg', 'tech'].map(async (category) => {
         const response = await apiRequest<unknown>(`/api/cron/${category}`, {
           method: 'GET', headers: { Authorization: `Bearer ${token}` },
