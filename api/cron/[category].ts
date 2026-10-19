@@ -4,7 +4,7 @@ import { fr } from 'date-fns/locale';
 import { fetchFeed } from '../../src/lib/rss';
 import { analyzeGlobalFeed } from '../../src/lib/gemini';
 import type { VercelRequest, VercelResponse } from '../digests';
-import { getRequestUserId } from '../_auth';
+import { getCronUserId } from '../_cronAuth';
 
 const prisma = new PrismaClient();
 
@@ -16,13 +16,18 @@ const categoryMap: Record<string, 'IA' | 'Luxembourg' | 'Tech'> = {
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   try {
-    const userId = getRequestUserId(req);
     const rawCat = req.query?.category;
     const slug = (Array.isArray(rawCat) ? rawCat[0] : rawCat || '').toLowerCase();
     const category = categoryMap[slug];
 
     if (!category) {
       res.status(400).json({ error: 'Catégorie invalide.' });
+      return;
+    }
+
+    const userId = await getCronUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: 'Authentification requise pour générer les synthèses.' });
       return;
     }
 
@@ -43,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     const now = new Date();
     const lastDigest = await prisma.digest.findFirst({
-      where: { userId, category },
+      where: { userId, category, NOT: [{ id: { startsWith: 'dig_gen_' } }, { id: { startsWith: 'dig_init_' } }] },
       orderBy: { createdAt: 'desc' },
     });
 

@@ -1,16 +1,23 @@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { z } from 'zod';
 import { supabase } from '../services/supabaseClient';
 import { getCurrentUser } from '../services/authService';
+import { apiRequest } from '../services/apiClient';
 import {
   createDigestSchema,
   digestsListSchema,
   type CreateDigestInput,
 } from '../utils/validation';
 import { readStored, writeStored } from './validatedStorage';
-import type { DayGroup, Digest, DigestCategory } from '../types/veyl';
+import type { DayGroup, Digest } from '../types/veyl';
 
 export const DIGESTS_STORAGE_KEY = '@veyl_digests_v1';
+
+const generationResponseSchema = z.object({
+  message: z.string().trim().min(1),
+  digestsCreated: z.number().int().nonnegative().optional(),
+});
 
 const nowIso = new Date().toISOString();
 
@@ -90,31 +97,26 @@ export function groupDigestsByDay(digests: Digest[]): DayGroup[] {
 }
 
 export async function getDigests(): Promise<Digest[]> {
+  if (supabase) {
+    try {
+      const user = await getCurrentUser();
+      if (!user) throw new Error('Connectez-vous pour charger vos synthèses.');
+      const { data, error } = await supabase.from('digests').select('*')
+        .eq('user_id', user.id).order('created_at', { ascending: false });
+      if (error || !Array.isArray(data)) throw new Error('Chargement des synthèses impossible. Réessayez.');
+      const mapped = digestsListSchema.parse(data.map((digest) => ({
+        id: digest.id, category: digest.category, title: digest.title,
+        content: digest.content, createdAt: digest.created_at,
+      })));
+      await writeStored(DIGESTS_STORAGE_KEY, digestsListSchema, mapped);
+      return mapped;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Chargement des synthèses impossible. Réessayez.');
+    }
+  }
   try {
     const stored = await readStored(DIGESTS_STORAGE_KEY, digestsListSchema, []);
     if (stored.length === 0) {
-      if (supabase) {
-        const user = await getCurrentUser();
-        if (user) {
-          const { data, error } = await supabase
-            .from('digests')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-          if (!error && Array.isArray(data) && data.length > 0) {
-            const mapped: Digest[] = data.map((d) => ({
-              id: d.id,
-              category: d.category as DigestCategory,
-              title: d.title,
-              content: d.content,
-              createdAt: d.created_at,
-            }));
-            await writeStored(DIGESTS_STORAGE_KEY, digestsListSchema, mapped);
-            return mapped;
-          }
-        }
-        return [];
-      }
       await writeStored(DIGESTS_STORAGE_KEY, digestsListSchema, DEFAULT_DIGESTS);
       return DEFAULT_DIGESTS;
     }
@@ -123,7 +125,7 @@ export async function getDigests(): Promise<Digest[]> {
     if (error instanceof Error && error.message.includes('Données locales')) {
       throw error;
     }
-    return supabase ? [] : DEFAULT_DIGESTS;
+    return DEFAULT_DIGESTS;
   }
 }
 
@@ -173,6 +175,27 @@ export async function addDigest(input: CreateDigestInput): Promise<Digest> {
 }
 
 export async function triggerDailyDigestsGeneration(): Promise<void> {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (error || !token) throw new Error('Connectez-vous pour générer vos synthèses.');
+      const results = await Promise.allSettled(['ia', 'luxembourg', 'tech'].map(async (category) => {
+        const response = await apiRequest<unknown>(`/api/cron/${category}`, {
+          method: 'GET', headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!generationResponseSchema.safeParse(response).success) {
+          throw new Error('Réponse de génération invalide. Réessayez dans quelques instants.');
+        }
+      }));
+      const failed = results.find((result) => result.status === 'rejected');
+      if (failed?.status === 'rejected') throw failed.reason;
+      await getDigests();
+      return;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Génération des synthèses impossible. Réessayez.');
+    }
+  }
   const todayIso = new Date().toISOString();
   const current = await getDigests();
 
@@ -202,23 +225,4 @@ export async function triggerDailyDigestsGeneration(): Promise<void> {
 
   await writeStored(DIGESTS_STORAGE_KEY, digestsListSchema, [...generated, ...current]);
 
-  if (supabase) {
-    try {
-      const user = await getCurrentUser();
-      if (user) {
-        await supabase.from('digests').insert(
-          generated.map((d) => ({
-            id: d.id,
-            user_id: user.id,
-            category: d.category,
-            title: d.title,
-            content: d.content,
-            created_at: d.createdAt,
-          }))
-        );
-      }
-    } catch {
-      // Ignorer l'erreur réseau cloud non bloquante
-    }
-  }
 }

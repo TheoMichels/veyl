@@ -25,12 +25,21 @@ export async function apiRequest<T>(
     headers,
   });
 
-  const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`Réponse serveur invalide (${response.status}). Réessayez dans quelques instants.`);
+  }
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    throw new Error('Réponse serveur invalide. Réessayez dans quelques instants.');
+  }
+  const payload = data as Record<string, unknown>;
 
-  if (!response.ok) {
+  if (!response.ok || typeof payload.error === 'string') {
     const errorMessage =
-      typeof data.error === 'string' && data.error.trim().length > 0
-        ? data.error
+      typeof payload.error === 'string' && payload.error.trim().length > 0
+        ? payload.error
         : `Erreur serveur (${response.status})`;
     throw new Error(errorMessage);
   }
