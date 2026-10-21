@@ -137,6 +137,7 @@ test.describe('Veyl — Parcours E2E Expo Web statique & Mock API', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
+            content: 'Analyse approfondie de l’actualité sélectionnée avec perspectives stratégiques.',
             analysis: 'Analyse approfondie de l’actualité sélectionnée avec perspectives stratégiques.',
           }),
         });
@@ -295,10 +296,26 @@ test.describe('Veyl — Parcours E2E Expo Web statique & Mock API', () => {
     const expandedCard = page.getByTestId('expanded-details-card');
     await expect(expandedCard).toBeVisible();
 
+    // Attendre que l'approfondissement IA apparaisse (texte généré et stocké)
+    await expect(page.getByText('Analyse approfondie de l’actualité sélectionnée')).toBeVisible({ timeout: 10000 });
+
     const closeBtn = page.getByTestId('expanded-details-close-btn');
     await expect(closeBtn).toBeVisible();
     await closeBtn.click();
     await expect(expandedCard).toBeHidden();
+
+    // Quand le texte est masqué mais stocké sur la page, le bouton devient violet (AC)
+    const sparkleSvg = goFurtherBtn.locator('svg');
+    await expect(sparkleSvg).toHaveAttribute('stroke', /#(7C3AED|8B5CF6)/i);
+
+    // Re-cliquer sur le bouton ré-affiche immédiatement le contenu sans recharger
+    await goFurtherBtn.click();
+    await expect(expandedCard).toBeVisible();
+
+    // Re-cliquer sur le bouton masque à nouveau le texte et préserve la couleur violette
+    await goFurtherBtn.click();
+    await expect(expandedCard).toBeHidden();
+    await expect(sparkleSvg).toHaveAttribute('stroke', /#(7C3AED|8B5CF6)/i);
   });
 
   test('Parcours 3 (AC-06, AC-07) : Paramètres Gemini, validation négative, CRUD Sources RSS et persistance après rechargement', async ({

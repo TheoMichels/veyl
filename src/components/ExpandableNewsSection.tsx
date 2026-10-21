@@ -224,6 +224,46 @@ export default function ExpandableNewsSection({
     }
   };
 
+  const getActionBtnAppearance = (actionIndex: number) => {
+    const isOpen = activeIndex === actionIndex;
+    const hasCachedContent = Boolean(cacheByIndex[actionIndex]);
+
+    if (isOpen) {
+      return {
+        backgroundColor: colors.mode === 'dark' ? 'rgba(99, 102, 241, 0.2)' : '#EEF2FF',
+        borderColor: colors.brand,
+        borderWidth: 1,
+        iconColor: colors.brand,
+        isFilled: true,
+        fillColor: colors.mode === 'dark' ? 'rgba(99, 102, 241, 0.4)' : '#EEF2FF',
+        accessibilityLabel: "Masquer l'approfondissement IA",
+      };
+    }
+
+    if (hasCachedContent) {
+      // Texte masqué mais toujours en cache / stocké sur la page : bouton violet
+      return {
+        backgroundColor: colors.mode === 'dark' ? 'rgba(139, 92, 246, 0.16)' : '#F5F3FF',
+        borderColor: colors.mode === 'dark' ? 'rgba(139, 92, 246, 0.45)' : '#DDD6FE',
+        borderWidth: 1,
+        iconColor: colors.accentViolet,
+        isFilled: true,
+        fillColor: colors.mode === 'dark' ? 'rgba(139, 92, 246, 0.4)' : '#EDE9FE',
+        accessibilityLabel: "Afficher l'approfondissement IA (déjà généré)",
+      };
+    }
+
+    return {
+      backgroundColor: colors.surface,
+      borderColor: 'transparent',
+      borderWidth: 1,
+      iconColor: colors.textMuted,
+      isFilled: false,
+      fillColor: undefined,
+      accessibilityLabel: "Approfondir avec l'IA",
+    };
+  };
+
   const renderExpandedCard = (actionIndex: number) => {
     if (activeIndex !== actionIndex) return null;
 
@@ -341,32 +381,38 @@ export default function ExpandableNewsSection({
               <Text style={[styles.sectionHeadingText, { color: colors.textPrimary }]}>
                 {section.title}
               </Text>
-              {section.sectionActionIndex !== null && (
-                <Pressable
-                  testID={`go-further-btn-${section.sectionActionIndex}`}
-                  onPress={() =>
-                    handleTriggerGoFurther(
-                      section.sectionActionIndex!,
-                      `${section.title}\n${section.paragraphs.join('\n')}`.trim()
-                    )
-                  }
-                  style={[
-                    styles.sparkleBtn,
-                    {
-                      backgroundColor: colors.surface,
-                    },
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Aller plus loin"
-                >
-                  <LucideSparkles
-                    size={16}
-                    color={activeIndex === section.sectionActionIndex ? colors.brand : colors.textMuted}
-                    isFilled={activeIndex === section.sectionActionIndex}
-                    fillColor={colors.mode === 'dark' ? 'rgba(49, 46, 129, 0.5)' : '#EEF2FF'}
-                  />
-                </Pressable>
-              )}
+              {section.sectionActionIndex !== null && (() => {
+                const btnState = getActionBtnAppearance(section.sectionActionIndex);
+                return (
+                  <Pressable
+                    testID={`go-further-btn-${section.sectionActionIndex}`}
+                    onPress={() =>
+                      handleTriggerGoFurther(
+                        section.sectionActionIndex!,
+                        `${section.title}\n${section.paragraphs.join('\n')}`.trim()
+                      )
+                    }
+                    style={[
+                      styles.sparkleBtn,
+                      {
+                        backgroundColor: btnState.backgroundColor,
+                        borderColor: btnState.borderColor,
+                        borderWidth: btnState.borderWidth,
+                      },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={btnState.accessibilityLabel}
+                    accessibilityState={{ expanded: activeIndex === section.sectionActionIndex }}
+                  >
+                    <LucideSparkles
+                      size={16}
+                      color={btnState.iconColor}
+                      isFilled={btnState.isFilled}
+                      fillColor={btnState.fillColor}
+                    />
+                  </Pressable>
+                );
+              })()}
             </View>
           ) : null}
 
@@ -391,27 +437,33 @@ export default function ExpandableNewsSection({
                   <View style={styles.bulletTextAndBtn}>
                     <Text style={[styles.bulletText, { color: colors.textSecondary }]}>
                       {renderFormattedInlineText(bullet.rawText, colors)}{' '}
-                      {bullet.actionIndex !== null && (
-                        <Pressable
-                          testID={`go-further-btn-${bullet.actionIndex}`}
-                          onPress={() => handleTriggerGoFurther(bullet.actionIndex!, query)}
-                          style={[
-                            styles.inlineSparkleBtn,
-                            {
-                              backgroundColor: colors.surface,
-                            },
-                          ]}
-                          accessibilityRole="button"
-                          accessibilityLabel="Aller plus loin"
-                        >
-                          <LucideSparkles
-                            size={14}
-                            color={activeIndex === bullet.actionIndex ? colors.brand : colors.textMuted}
-                            isFilled={activeIndex === bullet.actionIndex}
-                            fillColor={colors.mode === 'dark' ? 'rgba(49, 46, 129, 0.5)' : '#EEF2FF'}
-                          />
-                        </Pressable>
-                      )}
+                      {bullet.actionIndex !== null && (() => {
+                        const btnState = getActionBtnAppearance(bullet.actionIndex);
+                        return (
+                          <Pressable
+                            testID={`go-further-btn-${bullet.actionIndex}`}
+                            onPress={() => handleTriggerGoFurther(bullet.actionIndex!, query)}
+                            style={[
+                              styles.inlineSparkleBtn,
+                              {
+                                backgroundColor: btnState.backgroundColor,
+                                borderColor: btnState.borderColor,
+                                borderWidth: btnState.borderWidth,
+                              },
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityLabel={btnState.accessibilityLabel}
+                            accessibilityState={{ expanded: activeIndex === bullet.actionIndex }}
+                          >
+                            <LucideSparkles
+                              size={14}
+                              color={btnState.iconColor}
+                              isFilled={btnState.isFilled}
+                              fillColor={btnState.fillColor}
+                            />
+                          </Pressable>
+                        );
+                      })()}
                     </Text>
                   </View>
                 </View>
@@ -476,6 +528,7 @@ const styles = StyleSheet.create({
           verticalAlign: 'middle',
           marginLeft: 6,
           transform: [{ translateY: -1 }],
+          cursor: 'pointer',
         } as any)
       : {
           marginLeft: 6,
@@ -485,14 +538,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 5,
     borderRadius: 6,
-    borderWidth: 0,
+    borderWidth: 1,
   },
   sparkleBtn: {
+    ...(Platform.OS === 'web'
+      ? ({
+          cursor: 'pointer',
+        } as any)
+      : {}),
     alignItems: 'center',
     justifyContent: 'center',
     padding: 6,
     borderRadius: 6,
-    borderWidth: 0,
+    borderWidth: 1,
   },
   boldText: {
     fontWeight: '700',
