@@ -318,6 +318,53 @@ test.describe('Veyl — Parcours E2E Expo Web statique & Mock API', () => {
     await expect(sparkleSvg).toHaveAttribute('stroke', /#(7C3AED|8B5CF6)/i);
   });
 
+  test('isole les approfondissements entre rubriques même si une réponse arrive tard', async ({ page }) => {
+    let releaseIaResponse!: () => void;
+    let signalIaRequest!: () => void;
+    const iaRequestStarted = new Promise<void>((resolve) => {
+      signalIaRequest = resolve;
+    });
+    const iaResponseGate = new Promise<void>((resolve) => {
+      releaseIaResponse = resolve;
+    });
+
+    await page.route('**/api/go-further', async (route, request) => {
+      const { text = '' } = request.postDataJSON() as { text?: string };
+      if (text.includes('Nouvelle avancée en IA')) {
+        signalIaRequest();
+        await iaResponseGate;
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ content: 'Résultat IA tardif', analysis: 'Résultat IA tardif' }),
+        });
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ content: 'Résultat Luxembourg dédié', analysis: 'Résultat Luxembourg dédié' }),
+      });
+    });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    await page.getByTestId('go-further-btn-0').click();
+    await iaRequestStarted;
+
+    await page.getByTestId('tab-lux').click();
+    await expect(page.getByTestId('expanded-details-card')).toHaveCount(0);
+    await page.getByTestId('go-further-btn-0').click();
+    await expect(page.getByText('Résultat Luxembourg dédié')).toBeVisible();
+
+    const lateIaResponse = page.waitForResponse(
+      (response) => response.url().includes('/api/go-further') && response.request().postData()?.includes('Nouvelle avancée en IA') === true
+    );
+    releaseIaResponse();
+    await lateIaResponse;
+    await expect(page.getByText('Résultat IA tardif')).toHaveCount(0);
+    await expect(page.getByText('Résultat Luxembourg dédié')).toBeVisible();
+  });
+
   test('Parcours 3 (AC-06, AC-07) : Paramètres Gemini, validation négative, CRUD Sources RSS et persistance après rechargement', async ({
     page,
   }) => {

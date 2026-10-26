@@ -564,6 +564,7 @@ export default function DigestDashboard({
                 </Text>
 
                 <ExpandableNewsSection
+                  key={currentDigest.id}
                   content={currentDigest.content}
                   colors={colors}
                 />
