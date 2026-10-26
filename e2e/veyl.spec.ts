@@ -327,10 +327,11 @@ test.describe('Veyl — Parcours E2E Expo Web statique & Mock API', () => {
     const iaResponseGate = new Promise<void>((resolve) => {
       releaseIaResponse = resolve;
     });
+    let goFurtherRequestCount = 0;
 
     await page.route('**/api/go-further', async (route, request) => {
-      const { text = '' } = request.postDataJSON() as { text?: string };
-      if (text.includes('Nouvelle avancée en IA')) {
+      const isLateIaRequest = goFurtherRequestCount++ === 0;
+      if (isLateIaRequest) {
         signalIaRequest();
         await iaResponseGate;
         return route.fulfill({
@@ -348,7 +349,9 @@ test.describe('Veyl — Parcours E2E Expo Web statique & Mock API', () => {
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
+    const iaRequest = page.waitForRequest('**/api/go-further');
     await page.getByTestId('go-further-btn-0').click();
+    const lateRequest = await iaRequest;
     await iaRequestStarted;
 
     await page.getByTestId('tab-lux').click();
@@ -357,7 +360,7 @@ test.describe('Veyl — Parcours E2E Expo Web statique & Mock API', () => {
     await expect(page.getByText('Résultat Luxembourg dédié')).toBeVisible();
 
     const lateIaResponse = page.waitForResponse(
-      (response) => response.url().includes('/api/go-further') && response.request().postData()?.includes('Nouvelle avancée en IA') === true
+      (response) => response.url().includes('/api/go-further') && response.request().postData() === lateRequest.postData()
     );
     releaseIaResponse();
     await lateIaResponse;
